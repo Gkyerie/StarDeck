@@ -1,70 +1,86 @@
 @extends('layouts.app')
-@section('title', 'Detail Unit — StarDeck')
+@section('title', 'Rincian Unit — StarDeck')
+@section('page_label', 'Inventaris / Rincian Unit')
 
 @section('content')
-<div class="mb-4">
-    <a href="{{ route('units.index') }}" class="btn btn-outline-secondary btn-sm mb-3">
-        <i class="bi bi-arrow-left me-1"></i>Kembali ke Manajemen Unit
+<div class="mb-6">
+    <a href="{{ route('units.index') }}" class="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-cyan-300 transition">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        <span>Kembali ke Inventaris</span>
     </a>
-    <h1 class="h4 mb-0"><i class="bi bi-box-seam me-2"></i>Detail Unit: {{ $unit->name }}</h1>
 </div>
 
-<div class="card shadow-sm border-0" style="max-width: 800px;">
-    <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-start mb-3">
-            <div>
-                <span class="badge bg-secondary font-monospace fs-6 mb-2">{{ $unit->unit_code }}</span>
-                <h2 class="h4 mb-1">{{ $unit->name }}</h2>
-                <span class="badge bg-light text-dark border">
-                    {{ $unit->type === 'board_game' ? 'Board Game' : 'Console' }}
+@php
+    $gradient = $unit->type === 'board_game' ? 'from-orange-500/30 to-rose-900/20' : 'from-violet-500/30 to-indigo-900/20';
+    $iconSymbol = $unit->type === 'board_game' ? '◈' : '✦';
+@endphp
+
+<div class="max-w-2xl mx-auto rounded-3xl border border-slate-800/80 bg-slate-900/60 p-6 sm:p-8 backdrop-blur-xl shadow-2xl">
+    <div class="flex h-44 items-center justify-center rounded-2xl bg-gradient-to-br {{ $gradient }} text-6xl text-white shadow-inner">
+        {{ $iconSymbol }}
+    </div>
+
+    <div class="mt-6 flex items-start justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-white font-heading">{{ $unit->name }}</h1>
+            <div class="mt-1 text-xs text-slate-500 font-mono tracking-wider">{{ $unit->unit_code }}</div>
+        </div>
+        <div>
+            @if($unit->status === 'available')
+                <span class="inline-flex items-center rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+                    Tersedia
                 </span>
-            </div>
-            <div>
-                @if($unit->status === 'available')
-                    <span class="badge bg-success fs-6"><i class="bi bi-check-circle me-1"></i>Tersedia</span>
-                @else
-                    <span class="badge bg-warning text-dark fs-6"><i class="bi bi-clock-history me-1"></i>Sedang Dipinjam</span>
-                @endif
+            @else
+                <span class="inline-flex items-center rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-300">
+                    Sedang Dipinjam
+                </span>
+            @endif
+        </div>
+    </div>
+
+    <p class="mt-5 text-sm leading-6 text-slate-400">
+        {{ $unit->description ?: 'Tidak ada deskripsi detail untuk unit rekreasi ini.' }}
+    </p>
+
+    <div class="mt-6 grid grid-cols-3 gap-3 text-center">
+        <div class="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
+            <div class="text-[10px] uppercase tracking-wider text-slate-500">Tipe</div>
+            <div class="mt-1 text-xs font-semibold text-slate-200">
+                {{ $unit->type === 'board_game' ? 'Permainan Papan' : 'Konsol' }}
             </div>
         </div>
-
-        <hr>
-
-        <div class="row g-3 mb-4">
-            <div class="col-sm-6">
-                <span class="text-muted d-block small">Kategori</span>
-                <div class="mt-1">
-                    @forelse($unit->categories as $category)
-                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle me-1">{{ $category->name }}</span>
-                    @empty
-                        <span class="text-muted">-</span>
-                    @endforelse
-                </div>
-            </div>
-            <div class="col-sm-6">
-                <span class="text-muted d-block small">Kondisi Fisik</span>
-                <span class="fw-semibold">{{ $unit->condition }}</span>
-            </div>
-            <div class="col-12">
-                <span class="text-muted d-block small mb-1">Deskripsi</span>
-                <p class="text-secondary bg-light p-3 rounded mb-0">
-                    {{ $unit->description ?: 'Tidak ada deskripsi rinci untuk unit ini.' }}
-                </p>
+        <div class="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
+            <div class="text-[10px] uppercase tracking-wider text-slate-500">Kategori</div>
+            <div class="mt-1 text-xs font-semibold text-slate-200 truncate">
+                {{ $unit->categories->pluck('name')->implode(', ') ?: '-' }}
             </div>
         </div>
+        <div class="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
+            <div class="text-[10px] uppercase tracking-wider text-slate-500">Kondisi</div>
+            <div class="mt-1 text-xs font-semibold text-slate-200 truncate">
+                {{ $unit->condition }}
+            </div>
+        </div>
+    </div>
 
-        <div class="d-flex gap-2">
-            <a href="{{ route('units.edit', $unit->id) }}" class="btn btn-warning">
-                <i class="bi bi-pencil me-1"></i>Edit Unit
+    <div class="mt-7 pt-6 border-t border-slate-800/80 flex items-center justify-between gap-4">
+        <div class="flex gap-2">
+            <a href="{{ route('units.edit', $unit->id) }}" class="inline-flex items-center gap-2 rounded-xl bg-cyan-300 px-4 py-2.5 text-xs font-semibold text-slate-950 hover:bg-cyan-200 transition">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>
+                <span>Ubah Unit</span>
             </a>
-            <form action="{{ route('units.destroy', $unit->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus unit ini?');">
+            <form action="{{ route('units.destroy', $unit->id) }}" method="POST" onsubmit="return confirm('Hapus unit ini?');">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn btn-outline-danger">
-                    <i class="bi bi-trash me-1"></i>Hapus Unit
+                <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl border border-rose-400/25 bg-rose-400/10 px-3 py-2.5 text-xs font-semibold text-rose-300 hover:bg-rose-400/20 transition">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 11v6M14 11v6"/></svg>
+                    <span>Hapus</span>
                 </button>
             </form>
         </div>
+        <a href="{{ route('units.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white transition">
+            Tutup
+        </a>
     </div>
 </div>
 @endsection
