@@ -94,24 +94,6 @@
                 <span class="text-cyan-400 font-mono text-[11px]">Akses Kru Terverifikasi</span>
             </div>
         </div>
-
-        <!-- Demo Accounts Hint Quick Fill -->
-        <div class="mt-5 grid grid-cols-2 gap-3">
-            <button
-                type="button"
-                onclick="document.getElementById('email').value='admin@stardeck.local'; document.getElementById('password').value='password';"
-                class="rounded-xl border border-slate-800 bg-slate-900/80 px-3 py-2.5 text-xs font-semibold text-slate-300 transition hover:border-cyan-300/40 hover:text-cyan-200 active:bg-slate-800"
-            >
-                Akun Komandan (Admin)
-            </button>
-            <button
-                type="button"
-                onclick="document.getElementById('email').value='member1@stardeck.local'; document.getElementById('password').value='password';"
-                class="rounded-xl border border-slate-800 bg-slate-900/80 px-3 py-2.5 text-xs font-semibold text-slate-300 transition hover:border-cyan-300/40 hover:text-cyan-200 active:bg-slate-800"
-            >
-                Akun Astronot (Member)
-            </button>
-        </div>
     </div>
 </body>
 </html>

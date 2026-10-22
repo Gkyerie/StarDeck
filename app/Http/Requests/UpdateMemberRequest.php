@@ -22,7 +22,7 @@ class UpdateMemberRequest extends FormRequest
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('users', 'email')->ignore($memberId)->withTrashed(),
+                Rule::unique('users', 'email')->ignore($memberId),
             ],
             'password' => ['nullable', 'string', 'min:8'],
             'phone' => ['required', 'string', 'regex:/^\d{9,15}$/'],

@@ -41,15 +41,19 @@
 <div class="grid gap-6 lg:grid-cols-[1.2fr_.8fr]">
     <!-- Active Loans Slot Section -->
     <div class="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-6 backdrop-blur-sm">
+        @php
+            $activeCount = $activeLoans->count();
+            $quotaLeft = max(0, 2 - $activeCount);
+        @endphp
         <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h2 class="font-bold text-white text-base font-heading">Pinjaman Aktif Anda</h2>
                 <div class="mt-1 text-xs text-slate-500">
-                    {{ $activeLoansCount }} dari 2 slot kuota digunakan
+                    {{ $activeCount }} dari 2 slot kuota digunakan
                 </div>
             </div>
             <div class="rounded-xl border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs font-bold text-cyan-200">
-                Sisa kuota: {{ $remainingQuota }} unit
+                Sisa kuota: {{ $quotaLeft }} unit
             </div>
         </div>
 

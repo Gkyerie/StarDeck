@@ -20,7 +20,7 @@ class StoreMemberRequest extends FormRequest
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('users', 'email')->withTrashed(),
+                Rule::unique('users', 'email'),
             ],
             'password' => ['required', 'string', 'min:8'],
             'phone' => ['required', 'string', 'regex:/^\d{9,15}$/'],

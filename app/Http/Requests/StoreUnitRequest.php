@@ -20,7 +20,7 @@ class StoreUnitRequest extends FormRequest
                 'required',
                 'string',
                 'regex:/^SD-(BG|CN)-[0-9]{3}$/',
-                Rule::unique('units', 'unit_code')->withTrashed(),
+                Rule::unique('units', 'unit_code'),
             ],
             'type' => ['required', Rule::in(['board_game', 'console'])],
             'condition' => ['required', 'string', 'max:100'],

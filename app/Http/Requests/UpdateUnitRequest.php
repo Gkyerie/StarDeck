@@ -22,7 +22,7 @@ class UpdateUnitRequest extends FormRequest
                 'required',
                 'string',
                 'regex:/^SD-(BG|CN)-[0-9]{3}$/',
-                Rule::unique('units', 'unit_code')->ignore($unitId)->withTrashed(),
+                Rule::unique('units', 'unit_code')->ignore($unitId),
             ],
             'type' => ['required', Rule::in(['board_game', 'console'])],
             'condition' => ['required', 'string', 'max:100'],
