@@ -6,11 +6,9 @@
 
 | Item | Isi |
 |---|---|
-| Nama Kelompok | (isi) |
-| Nama Team | (isi) |
+| Nama Kelompok | StarDeck |
 | Nama Project | StarDeck: Sistem Peminjaman Board Game & Console untuk Astronot Stasiun Luar Angkasa |
-| Anggota | 1. (nama) 2. (nama) 3. (nama) |
-| Skema Sertifikasi | BNSP Web Developer |
+| Anggota | 1. Muhammad Galih Ilham 2. Jasmine Adinda Wibowo 3. Artadina Septiani  |
 
 ## Deskripsi Singkat
 
@@ -51,17 +49,12 @@ StarDeck adalah aplikasi web untuk mengelola peminjaman board game dan console h
 - Hanya admin yang dapat mencatat peminjaman dan memproses pengembalian
 - Kode unit harus unik
 
-## Skema Database
-
-![Skema Database StarDeck](docs/skema-database.png)
-
-## Video Demo
-
-[Tonton video demo StarDeck](ISI-LINK-VIDEO)
-
 ## Teknologi
 
-(isi sesuai yang benar-benar dipakai, misalnya Laravel, MySQL, Blade, Bootstrap)
+- Framework: Laravel (MVC Architecture)
+- Database: MySQL 8.x (InnoDB Engine)
+- Frontend: Blade Template + Bootstrap CSS
+- Version Control: GitLab Repository
 
 ## Cara Instalasi
 
@@ -82,8 +75,12 @@ Buka `http://localhost:8000`.
 
 | Peran | Email | Password |
 |---|---|---|
-| Admin | admin@stardeck.test | (isi) |
-| Anggota | (isi dari seeder) | (isi) |
+| Admin | admin@stardeck.local | password |
+| Anggota | aria@stardeck.local | password |
+| Anggota | budi@stardeck.local | password |
+| Anggota | citra@stardeck.local | password |
+| Anggota | dian@stardeck.local | password |
+| Anggota | eko@stardeck.local | password |
 
 ## Dokumentasi Terkait
 
