@@ -1,59 +1,87 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# StarDeck
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Sistem Peminjaman Board Game & Console untuk Astronot Stasiun Luar Angkasa**
 
-## About Laravel
+## Identitas
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+| Item | Isi |
+|---|---|
+| Nama Kelompok | StarDeck |
+| Nama Project | StarDeck: Sistem Peminjaman Board Game & Console untuk Astronot Stasiun Luar Angkasa |
+| Anggota | 1. Muhammad Galih Ilham 2. Jasmine Adinda Wibowo 3. Artadina Septiani  |
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Deskripsi Singkat
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+StarDeck adalah aplikasi web untuk mengelola peminjaman board game dan console hiburan di stasiun luar angkasa. Sistem membatasi peminjaman maksimal 2 unit per anggota dan maksimal 5 hari, menghitung denda keterlambatan otomatis (Rp 5.000 per hari), serta menyimpan riwayat peminjaman yang bisa dicetak.
 
-## Learning Laravel
+## Hak Akses
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+| Peran | Istilah di aplikasi | Kemampuan |
+|---|---|---|
+| Admin | Komandan Stasiun | Kelola unit, kategori, anggota; catat peminjaman; proses pengembalian; lihat daftar pinjaman; lihat dan cetak riwayat |
+| User (Anggota) | Astronot | Lihat dan cari unit, ubah profil sendiri, lihat pinjaman sendiri |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## List Fitur
 
-## Laravel Sponsors
+**Umum**
+- Login dan logout (semua halaman wajib login)
+- Pencarian unit berdasarkan nama unit
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+**Anggota (Astronot)**
+- Lihat katalog unit beserta kategori dan status
+- Lihat dan ubah profil sendiri (satu user satu profil)
+- Lihat daftar unit yang sedang dipinjam sendiri
 
-### Premium Partners
+**Admin (Komandan Stasiun)**
+- CRUD unit (satu unit bisa punya banyak kategori; nama boleh sama, kode unit unik)
+- CRUD kategori
+- CRUD user/anggota beserta profil
+- Input peminjaman (validasi maksimal 2 unit aktif per anggota)
+- Proses pengembalian dan hitung denda otomatis
+- Lihat daftar semua unit yang sedang dipinjam
+- Lihat dan cetak riwayat peminjaman per anggota
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Aturan Bisnis Utama
 
-## Contributing
+- Maksimal 2 unit aktif per anggota
+- Lama pinjam maksimal 5 hari, jatuh tempo = tanggal pinjam + 5 hari
+- Denda = hari telat x Rp 5.000
+- Hanya admin yang dapat mencatat peminjaman dan memproses pengembalian
+- Kode unit harus unik
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Teknologi
 
-## Code of Conduct
+- Framework: Laravel (MVC Architecture)
+- Database: MySQL 8.x (InnoDB Engine)
+- Frontend: Blade Template + Bootstrap CSS
+- Version Control: GitLab Repository
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Cara Instalasi
 
-## Security Vulnerabilities
+```bash
+git clone <url-repository>
+cd <nama-folder>
+composer install
+cp .env.example .env
+php artisan key:generate
+# atur koneksi database di file .env
+php artisan migrate --seed
+php artisan serve
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Buka `http://localhost:8000`.
 
-## License
+## Akun Demo
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+| Peran | Email | Password |
+|---|---|---|
+| Admin | admin@stardeck.local | password |
+| Anggota | aria@stardeck.local | password |
+| Anggota | budi@stardeck.local | password |
+| Anggota | citra@stardeck.local | password |
+| Anggota | dian@stardeck.local | password |
+| Anggota | eko@stardeck.local | password |
+
+## Dokumentasi Terkait
+
+BRD, Flow Chart/ERD, PRD, hasil UAT, dan manual book ada di folder `docs/`.
