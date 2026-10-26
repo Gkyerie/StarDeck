@@ -14,7 +14,7 @@ class CatalogController extends Controller
         $query = Unit::with('categories');
 
         if ($search = $request->input('search')) {
-            $query->where('name', 'like', '%' . $search . '%');
+            $query->where('name', 'like', '%'.$search.'%');
         }
 
         if ($categoryId = $request->input('category')) {
@@ -32,6 +32,7 @@ class CatalogController extends Controller
     public function show(int $unit): View
     {
         $unit = Unit::with('categories')->findOrFail($unit);
+
         return view('catalog.show', compact('unit'));
     }
 }

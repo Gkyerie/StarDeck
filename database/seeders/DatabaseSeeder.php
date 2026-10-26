@@ -3,12 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
-use App\Models\Loan;
 use App\Models\MemberProfile;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
@@ -93,7 +91,7 @@ class DatabaseSeeder extends Seeder
                 ]
             );
 
-            if (!$user->memberProfile) {
+            if (! $user->memberProfile) {
                 MemberProfile::create(array_merge(
                     ['user_id' => $user->id],
                     $memberData['profile']

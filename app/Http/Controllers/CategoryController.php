@@ -13,6 +13,7 @@ class CategoryController extends Controller
     public function index(): View
     {
         $categories = Category::withCount('units')->orderBy('name')->get();
+
         return view('categories.index', compact('categories'));
     }
 
@@ -32,6 +33,7 @@ class CategoryController extends Controller
     public function edit(int $category): View
     {
         $category = Category::findOrFail($category);
+
         return view('categories.edit', compact('category'));
     }
 

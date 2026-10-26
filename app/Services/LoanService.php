@@ -22,7 +22,7 @@ class LoanService
             // 1. Lock member row, validate
             $member = User::lockForUpdate()->find($memberId);
 
-            if (!$member) {
+            if (! $member) {
                 throw new \Exception('Anggota tidak ditemukan.');
             }
             if ($member->trashed()) {
@@ -31,14 +31,14 @@ class LoanService
             if ($member->role !== 'member') {
                 throw new \Exception('Pengguna bukan anggota.');
             }
-            if (!$member->memberProfile) {
+            if (! $member->memberProfile) {
                 throw new \Exception('Anggota belum memiliki profil lengkap.');
             }
 
             // 2. Lock unit row, validate
             $unit = Unit::lockForUpdate()->find($unitId);
 
-            if (!$unit) {
+            if (! $unit) {
                 throw new \Exception('Unit tidak ditemukan.');
             }
             if ($unit->trashed()) {
@@ -101,7 +101,7 @@ class LoanService
             // Read loan first to get member_id and unit_id
             $loan = Loan::find($loanId);
 
-            if (!$loan) {
+            if (! $loan) {
                 throw new \Exception('Pinjaman tidak ditemukan.');
             }
 
@@ -112,7 +112,7 @@ class LoanService
             // Re-read and lock loan
             $loan = Loan::lockForUpdate()->find($loanId);
 
-            if (!$loan || $loan->status !== 'borrowed') {
+            if (! $loan || $loan->status !== 'borrowed') {
                 throw new \Exception('Pinjaman sudah dikembalikan atau tidak valid.');
             }
 
@@ -154,7 +154,7 @@ class LoanService
         DB::transaction(function () use ($memberId) {
             $member = User::lockForUpdate()->find($memberId);
 
-            if (!$member) {
+            if (! $member) {
                 throw new \Exception('Anggota tidak ditemukan.');
             }
 
@@ -180,7 +180,7 @@ class LoanService
         DB::transaction(function () use ($unitId) {
             $unit = Unit::lockForUpdate()->find($unitId);
 
-            if (!$unit) {
+            if (! $unit) {
                 throw new \Exception('Unit tidak ditemukan.');
             }
 

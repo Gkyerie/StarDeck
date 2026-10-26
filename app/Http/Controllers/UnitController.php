@@ -23,7 +23,7 @@ class UnitController extends Controller
         $query = Unit::with('categories');
 
         if ($search = $request->input('search')) {
-            $query->where('name', 'like', '%' . $search . '%');
+            $query->where('name', 'like', '%'.$search.'%');
         }
 
         if ($categoryId = $request->input('category')) {
@@ -45,12 +45,14 @@ class UnitController extends Controller
     public function show(int $unit): View
     {
         $unit = Unit::with('categories')->findOrFail($unit);
+
         return view('units.show', compact('unit'));
     }
 
     public function create(): View
     {
         $categories = Category::orderBy('name')->get();
+
         return view('units.create', compact('categories'));
     }
 
@@ -73,6 +75,7 @@ class UnitController extends Controller
     {
         $unit = Unit::with('categories')->findOrFail($unit);
         $categories = Category::orderBy('name')->get();
+
         return view('units.edit', compact('unit', 'categories'));
     }
 
@@ -96,6 +99,7 @@ class UnitController extends Controller
     {
         try {
             $this->loanService->deleteUnit($unit);
+
             return redirect()->route('units.index')
                 ->with('success', 'Unit berhasil dihapus.');
         } catch (\Exception $e) {

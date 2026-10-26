@@ -19,7 +19,7 @@ class AuthController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
-        if (!Auth::attempt($credentials)) {
+        if (! Auth::attempt($credentials)) {
             return back()
                 ->withInput($request->only('email'))
                 ->withErrors(['email' => 'Email atau password salah.']);
@@ -31,6 +31,7 @@ class AuthController extends Controller
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
+
             return redirect()->route('login')
                 ->withErrors(['email' => 'Akun Anda telah dinonaktifkan.']);
         }

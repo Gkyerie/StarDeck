@@ -24,7 +24,6 @@ class Unit extends Model
     /**
      * Status is not fillable — it changes only via loan service transactions.
      */
-
     protected function casts(): array
     {
         return [

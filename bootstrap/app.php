@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\EnsureNotSoftDeleted;
+use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,12 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
-            'not.softdeleted' => \App\Http\Middleware\EnsureNotSoftDeleted::class,
+            'admin' => EnsureUserIsAdmin::class,
+            'not.softdeleted' => EnsureNotSoftDeleted::class,
         ]);
 
         $middleware->appendToGroup('web', [
-            \App\Http\Middleware\EnsureNotSoftDeleted::class,
+            EnsureNotSoftDeleted::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

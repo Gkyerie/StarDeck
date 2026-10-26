@@ -11,7 +11,6 @@ use App\Services\LoanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -119,7 +118,7 @@ class MemberController extends Controller
             ];
 
             // Only update password if provided
-            if (!empty($validated['password'])) {
+            if (! empty($validated['password'])) {
                 $userData['password'] = $validated['password'];
             }
 
@@ -158,6 +157,7 @@ class MemberController extends Controller
     {
         try {
             $this->loanService->deleteMember($member);
+
             return redirect()->route('members.index')
                 ->with('success', 'Anggota berhasil dihapus.');
         } catch (\Exception $e) {
