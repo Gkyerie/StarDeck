@@ -81,6 +81,11 @@
                         <span>Pinjaman Aktif</span>
                     </a>
 
+                    <a href="{{ route('loans.history-all') }}" class="group flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-medium transition-all {{ request()->routeIs('loans.history-all') ? 'bg-cyan-300/10 text-cyan-300 shadow-[inset_3px_0_0_#67e8f9]' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                        <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l3 2" /></svg>
+                        <span>Riwayat Semua Pinjaman</span>
+                    </a>
+
                     <a href="{{ route('catalog.index') }}" class="group flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-medium transition-all {{ request()->routeIs('catalog.*') ? 'bg-cyan-300/10 text-cyan-300 shadow-[inset_3px_0_0_#67e8f9]' : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
                         <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
                         <span>Katalog Publik</span>

@@ -463,6 +463,56 @@ class StarDeckUatTest extends TestCase
         $this->assertDatabaseHas('loans', ['id' => $loan->id, 'status' => 'returned']);
     }
 
+    public function test_25_admin_can_view_filter_and_print_all_loan_history(): void
+    {
+        $returnedUnit = Unit::where('unit_code', 'SD-BG-001')->firstOrFail();
+        $activeUnit = Unit::where('unit_code', 'SD-BG-002')->firstOrFail();
+
+        $this->createLoan(
+            $this->memberA,
+            $returnedUnit,
+            borrowedAt: '2026-10-10',
+            status: 'returned',
+            returnedAt: '2026-10-15'
+        );
+        $this->createLoan(
+            $this->memberB,
+            $activeUnit,
+            borrowedAt: '2026-10-20',
+            dueDate: '2026-10-25'
+        );
+
+        $this->actingAs($this->admin)
+            ->get(route('loans.history-all'))
+            ->assertOk()
+            ->assertSee('Riwayat semua pinjaman')
+            ->assertSee('data-date-display', false)
+            ->assertSee('readonly', false)
+            ->assertSee('Pilih tanggal pinjam', false)
+            ->assertSee('Pilih tanggal kembali', false)
+            ->assertSee('aria@stardeck.local')
+            ->assertSee('budi@stardeck.local');
+
+        $this->get(route('loans.history-all', [
+            'borrowed_at' => '2026-10-10',
+            'returned_at' => '2026-10-15',
+            'status' => 'returned',
+        ]))
+            ->assertOk()
+            ->assertSee('aria@stardeck.local')
+            ->assertDontSee('budi@stardeck.local');
+
+        $this->get(route('loans.print-all-history', [
+            'borrowed_at' => '2026-10-10',
+            'returned_at' => '2026-10-15',
+            'status' => 'returned',
+        ]))
+            ->assertOk()
+            ->assertSee('Laporan Semua Riwayat Pinjaman')
+            ->assertSee('Aria Nebula')
+            ->assertDontSee('Budi Antares');
+    }
+
     private function createLoan(
         User $member,
         Unit $unit,

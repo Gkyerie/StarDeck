@@ -11,6 +11,9 @@
         <p class="mt-1 text-sm text-slate-400">Pantau inventaris rekreasi dan aktivitas peminjaman seluruh kru dari satu pusat kendali.</p>
     </div>
     <div class="flex gap-2">
+        <a href="{{ route('loans.history-all') }}" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 text-sm font-semibold text-slate-200 transition hover:border-cyan-300/40 hover:text-cyan-200">
+            <span>Riwayat Semua</span>
+        </a>
         <a href="{{ route('loans.create') }}" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 shadow-[0_8px_24px_rgba(34,211,238,.18)] transition-all hover:bg-cyan-200 active:scale-[.98]">
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
             <span>Peminjaman Baru</span>

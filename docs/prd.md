@@ -1,180 +1,463 @@
-# StarDeck — Product Requirements Document
+# **StarDeck – Product Requirements Document (PRD)**
 
-Status: spesifikasi implementasi Laravel 12 untuk proyek yang sudah ada.
-Sumber produk: `StarDeck – PRD(1).pdf`. Skema pendamping: `erd.md`.
-Dokumen ini merangkum kebutuhan sumber dan menetapkan keputusan teknis implementasi; bukan bukti bahwa aplikasi sudah selesai atau lulus uji.
+**StarDeck: Sistem Peminjaman Board Game & Console untuk Astronot Stasiun Luar Angkasa**
 
-## 1. Tujuan dan cakupan
+## **1\. Ringkasan Produk**
 
-StarDeck mengelola peminjaman unit fisik board game dan console untuk kru stasiun luar angkasa. Sistem harus menjelaskan siapa memegang setiap unit, membatasi pinjaman, menghitung keterlambatan, serta menyimpan riwayat yang dapat dicetak.
+StarDeck adalah aplikasi web untuk mengelola peminjaman board game dan console hiburan di stasiun luar angkasa. Aplikasi mencatat inventaris unit, membatasi peminjaman secara adil (maksimal 2 unit per anggota, maksimal 5 hari), menghitung denda keterlambatan secara otomatis, dan menyimpan riwayat peminjaman yang bisa dicetak.
 
-Fitur wajib: login/logout, otorisasi admin/member, katalog dan pencarian nama unit, CRUD kategori/unit/anggota, profil sendiri, pencatatan pinjam dan kembali, denda otomatis, daftar pinjaman, riwayat per anggota, cetak, migration, seeder, pengujian, dan dokumentasi.
+### **1.1 Masalah yang Diselesaikan**
 
-Di luar cakupan: registrasi publik, reservasi, pembayaran denda, notifikasi email/SMS, aplikasi native, upload banyak foto unit. Jangan membuat fitur tambahan tersebut.
+* Tidak jelas siapa yang sedang memegang unit tertentu.  
+* Satu kru bisa menimbun banyak unit sehingga kru lain tidak kebagian.  
+* Keterlambatan pengembalian tidak tercatat dan tidak ada konsekuensi.  
+* Ruang penyimpanan stasiun terbatas sehingga stok harus terkontrol.
 
-## 2. Kondisi proyek yang harus diperiksa
+**Skenario masalah di lapangan:**
 
-- Proyek pengguna berada di `D:\stardeck`, Windows PowerShell dan Laragon.
-- Versi yang dilaporkan: Laravel 12.70.1, PHP 8.3.31, Composer 2.8.6, Node 25.9.0, npm 11.12.1, Git 2.46.2.
-- Pengguna telah mengonfirmasi koneksi MySQL berhasil. Jangan membuat ulang proyek atau mengganti framework.
-- Migration awal `users` masih bawaan Laravel: id, name, email, email_verified_at, password, remember_token, timestamps; file yang sama membuat password_reset_tokens dan sessions.
-- Migration tambahan `add_role_and_deleted_at_to_users_table` sudah diberikan sebagai instruksi, tetapi keberadaan file dan keberhasilan eksekusinya BELUM dikonfirmasi. Periksa file, `migrate:status`, dan struktur DB sebelum melakukan perubahan.
-- Konfigurasi lokal sebelumnya diarahkan ke session=file, cache=file, queue=sync. Verifikasi konfigurasi efektif tanpa menampilkan isi `.env` atau secret.
-- Desain Figma dimiliki pengguna, tetapi link/export belum tersedia dalam konteks ini. Jangan mengaku telah melihat desainnya.
+| ID | Skenario | Dampak | Dijawab oleh |
+| :---- | :---- | :---- | :---- |
+| PS-01 | Astronot A meminjam PS5 lalu lupa mengembalikan. Astronot B ingin bermain tetapi tidak tahu unit itu dipegang siapa | Waktu terbuang mencari unit, kru berselisih | FR-14, FR-34 |
+| PS-02 | Satu astronot membawa 4 board game ke modulnya, kru lain tidak kebagian dan modul penuh barang | Penyimpanan sesak, pembagian tidak adil | FR-25 |
+| PS-03 | Ada dua unit board game dengan judul yang sama, satu rusak ringan, dan tidak ada yang tahu unit mana dipinjam siapa | Unit fisik tidak bisa dilacak | FR-12, FR-13 |
+| PS-04 | Sebuah unit terlambat dikembalikan berminggu-minggu tanpa catatan dan tanpa konsekuensi | Rotasi antar kru macet | FR-26, FR-30 |
+| PS-05 | Komandan menghitung denda manual dan hasilnya sering berbeda-beda | Perselisihan, tidak konsisten | FR-30, FR-32 |
+| PS-06 | Komandan butuh bukti riwayat pinjam untuk evaluasi akhir misi | Tidak ada arsip | FR-36, FR-37 |
+| PS-07 | Orang yang tidak berwenang membuka atau mengubah data pinjaman | Data tidak aman | FR-02, FR-05, FR-08 |
 
-## 3. Teknologi dan aturan pengerjaan
+### **1.2 Tujuan Produk**
 
-- Laravel 12, PHP 8.3, MySQL InnoDB/utf8mb4, Blade, Bootstrap 5 dan CSS khusus, Vite.
-- Pertahankan dependency dan lockfile yang sudah ada bila kompatibel. Periksa kebutuhan Node dari dependency aktual; jangan memperbarui framework atau dependency besar secara otomatis.
-- Gunakan MVC, Form Request, middleware/policy untuk akses, dan service transaksi peminjaman/pengembalian.
-- Gunakan migration sebagai jalur instalasi. Jangan mengimpor SQL lama lalu membuat tabel yang sama lewat migration.
-- Perubahan pada database yang telah dimigrasikan memakai migration tambahan. Jangan mengubah migration lama yang sudah dijalankan untuk menyamarkan perubahan skema.
-- Jangan menjalankan `migrate:fresh`, `db:wipe`, drop database, reset Git, atau menimpa pekerjaan pengguna. Database pengujian harus terpisah dan diperiksa sebelum test yang mereset DB.
-- Jangan menyimpan secret di kode, prompt, log, README atau Git. `.env.example` hanya berisi contoh tanpa secret.
+1. Semua unit hiburan terdata dengan kode unik dan status yang lebih akurat.  
+2. Peminjaman mengikuti aturan maksimal 2 unit dan 5 hari tanpa bisa dilanggar.  
+3. Denda dihitung otomatis dan konsisten.  
+4. Admin dapat menelusuri dan mencetak riwayat peminjaman setiap anggota.
 
-## 4. Peran dan akses
+### **1.3 Indikator Keberhasilan**
 
-| Fitur | Admin / Komandan Stasiun | Member / Astronot |
-|---|---|---|
-| Login, logout, katalog, pencarian | Ya | Ya |
-| Dashboard | Ringkasan inventaris dan pinjaman seluruh anggota | Ringkasan pinjaman sendiri |
-| CRUD kategori dan unit | Ya | Tidak |
-| CRUD akun anggota beserta profil | Ya | Tidak |
-| Profil anggota | Kelola melalui manajemen anggota | Lihat/ubah profil sendiri |
-| Input peminjaman dan pengembalian | Ya | Tidak |
-| Pinjaman aktif | Semua | Milik sendiri |
-| Riwayat per anggota dan cetak | Ya | Tidak |
+| Indikator | Target |
+| :---- | :---- |
+| Seluruh poin soal (1 sampai 20\) terpenuhi | 100% |
+| Peminjaman ke-3 oleh anggota yang sudah meminjam 2 unit | Ditolak sistem |
+| Unit berstatus dipinjam tidak bisa dipinjam lagi | Ditolak sistem |
+| Perhitungan denda sesuai rumus | Akurat pada semua skenario uji |
+| Akses halaman tanpa login | Selalu dialihkan ke halaman login |
 
-Semua halaman aplikasi selain login membutuhkan autentikasi. Aset publik yang diperlukan login tetap dapat dimuat. Tidak ada route registrasi publik. Pembatasan diberlakukan di server, bukan hanya menyembunyikan tombol. Akun yang soft deleted tidak boleh login maupun memakai sesi lama untuk mengakses aplikasi.
+**Metrik dampak setelah sistem dipakai:**
 
-CRUD anggota selalu membuat role `member`; jangan mempercayai role dari form anggota/profil. Pembuatan akun admin awal dilakukan lewat seeder. Pengelolaan role admin tambahan bukan kebutuhan wajib.
+| Metrik | Target | Cara mengukur |
+| :---- | :---- | :---- |
+| Anggota yang memegang lebih dari 2 unit sekaligus | 0 | Cek daftar pinjaman aktif |
+| Kesesuaian status unit di sistem dengan kondisi fisik | 100% | Pencocokan stok berkala oleh Admin |
+| Waktu mencatat satu peminjaman | Kurang dari 1 menit | Uji coba saat demo |
+| Pinjaman yang terlambat dibanding total pinjaman | Kurang dari 10% | Riwayat peminjaman |
+| Pengembalian yang denda otomatisnya sesuai rumus | 100% | Uji skenario AC-10 dan AC-11 |
+| Waktu menampilkan dan mencetak riwayat satu anggota | Kurang dari 10 detik | Uji coba saat demo |
 
-## 5. Kebutuhan fungsional
+## **2\. Ruang Lingkup**
 
-| ID sumber | Kebutuhan implementasi |
-|---|---|
-| FR-01–05 | Login email/password, logout, redirect dashboard sesuai peran, autentikasi dan otorisasi server. Pesan login gagal bersifat umum. |
-| FR-06–08 | Setiap member tepat satu profil; member hanya membaca dan mengubah profil sendiri. |
-| FR-09–15 | CRUD unit, minimal satu kategori valid, nama unit boleh sama, kode unik, katalog/status/kategori dan pencarian berdasarkan nama. |
-| FR-16–18 | CRUD kategori, nama unik; pilih kebijakan menolak penghapusan kategori yang masih direferensikan unit. |
-| FR-19–22 | Admin membuat/mengubah anggota beserta profil; email unik; hapus hanya bila tidak memiliki pinjaman aktif. |
-| FR-23–28 | Admin memilih member aktif dan unit tersedia; maksimal dua pinjaman aktif; tanggal otomatis; status unit diperbarui secara atomik. |
-| FR-29–33 | Admin memproses pengembalian, tanggal otomatis, denda otomatis, status sinkron; daftar menandai keterlambatan. |
-| FR-34–37 | Admin melihat semua pinjaman aktif; member hanya miliknya; admin melihat dan mencetak riwayat per anggota. |
+### **2.1 Dalam Lingkup**
 
-### Peminjaman
+* Autentikasi (login dan logout) dengan dua peran: Admin dan Anggota.  
+* Manajemen unit, kategori, dan user/anggota oleh Admin.  
+* Profil anggota (satu user satu profil) yang bisa diubah sendiri.  
+* Pencarian unit berdasarkan nama.  
+* Peminjaman, pengembalian, dan perhitungan denda.  
+* Daftar pinjaman aktif (Admin: semua; Anggota: miliknya sendiri).  
+* Riwayat peminjaman yang dapat dicetak oleh Admin.  
+* Migration dan seeder data awal.  
+* README, skema database, dan video demo.
 
-1. Admin memilih satu member dan satu unit; satu baris `loans` selalu mewakili satu unit.
-2. Server memeriksa member belum dihapus, role member, profil tersedia, jumlah pinjaman berstatus borrowed kurang dari dua.
-3. Unit belum dihapus, berstatus available, dan tidak memiliki loan borrowed.
-4. Server menetapkan borrowed_at = tanggal hari ini, due_date = borrowed_at + 5 hari, processed_by = admin yang login.
-5. Simpan loan borrowed dan ubah unit menjadi borrowed dalam transaksi yang sama.
+### **2.2 Di Luar Lingkup**
 
-Pinjaman terlambat tetap dihitung sebagai pinjaman aktif. Keterlambatan tidak menambah larangan meminjam bila total aktif masih kurang dari dua.
+Pembayaran denda online, notifikasi email/SMS, registrasi mandiri, reservasi unit, dan aplikasi mobile native.
 
-### Pengembalian
+## **3\. Pengguna dan Peran**
 
-1. Hanya admin; loan harus masih borrowed.
-2. returned_at ditetapkan server ke hari ini dan tidak boleh sebelum borrowed_at.
-3. late_days = max(0, selisih hari kalender returned_at dengan due_date).
-4. fine_amount = late_days × 5000; simpan nilai final.
-5. Ubah loan menjadi returned dan unit menjadi available secara atomik.
-6. Pengembalian ulang ditolak tanpa mengubah tanggal atau denda sebelumnya.
+| Peran | Istilah UI | Deskripsi | Hak Akses Utama |
+| :---- | :---- | :---- | :---- |
+| Admin | Komandan Stasiun | Pengelola sistem dan inventaris | Kelola unit, kategori, user; proses peminjaman dan pengembalian; lihat dan cetak riwayat |
+| Anggota | Astronot | Kru stasiun yang terdaftar | Lihat katalog, cari unit, kelola profil sendiri, lihat pinjaman sendiri |
 
-Contoh: pinjam 1 November → jatuh tempo 6 November. Kembali 6 November: Rp0; kembali 9 November: 3 hari, Rp15.000. Semua perhitungan memakai tanggal kalender dalam satu timezone aplikasi. Keputusan implementasi lokal: Asia/Jakarta; tetapkan konsisten di konfigurasi dan test.
+### **3.1 Persona**
 
-`processed_by` adalah admin pencatat PEMINJAMAN dan tidak ditimpa ketika pengembalian. Status terlambat dihitung dari borrowed dan due_date < hari ini; tidak menambah nilai enum. Denda pinjaman aktif belum merupakan denda final; bila ditampilkan, beri label estimasi.
+**Komandan Stasiun (Admin).** Bertanggung jawab atas inventaris hiburan kru. Butuh data stok yang akurat, proses pinjam dan kembali yang cepat, dan laporan yang bisa dicetak.
 
-### Penghapusan dan riwayat
+**Astronot (Anggota).** Ingin tahu game apa yang tersedia, mengajukan pinjam ke admin, dan memantau kapan harus mengembalikan agar tidak kena denda.
 
-- Unit/member dengan pinjaman aktif tidak dapat dihapus.
-- Unit/member tanpa pinjaman aktif di-soft-delete agar riwayat tetap utuh. Profil dan pivot kategori tetap tersimpan.
-- Email dan kode unit tetap unik termasuk milik data terhapus; tidak digunakan ulang.
-- Kategori yang direferensikan pivot, termasuk oleh unit soft deleted, tidak dapat dihapus. Jangan melakukan detach otomatis.
-- Riwayat mengambil identitas member, unit, dan admin termasuk soft deleted. Tidak ada fitur menghapus loan.
-- Cetak melalui halaman browser A4 dengan print stylesheet; tampilkan anggota, kode/nama unit, tanggal pinjam/jatuh tempo/kembali, status dan denda. Sembunyikan navigasi dan tombol saat cetak.
+## **4\. Aturan Bisnis dan Keputusan Tim**
 
-## 6. Validasi
+| Kode | Aturan | No Soal |
+| :---- | :---- | :---- |
+| BR-01 | Ada 2 peran: Admin dan User (anggota) | 2 |
+| BR-02 | Semua pengguna wajib login | 3 |
+| BR-03 | Hanya user terdaftar sebagai anggota yang dapat meminjam | 4 |
+| BR-04 | Satu user hanya punya satu profil | 5 |
+| BR-05 | Setiap user dapat mengubah profilnya sendiri | 6 |
+| BR-06 | Satu unit dapat memiliki banyak kategori | 7 |
+| BR-07 | Nama unit boleh sama, dibedakan kode unit | 8 |
+| BR-08 | Kode unit harus unik | 8a |
+| BR-09 | Pencarian unit berdasarkan nama | 9 |
+| BR-10 | Admin dapat tambah, ubah, hapus unit, kategori, user | 10 |
+| BR-11 | Maksimal 2 unit dipinjam per anggota | 11 |
+| BR-12 | Maksimal 5 hari, lebih dari itu kena denda | 12 |
+| BR-13 | Hanya Admin yang memproses pengembalian | 13 |
+| BR-14 | Admin melihat daftar unit yang dipinjam | 14 |
+| BR-15 | Anggota hanya melihat pinjamannya sendiri | 15 |
+| BR-16 | Admin melihat dan mencetak riwayat peminjaman anggota | 16 |
+| BR-17 | Validasi pada field yang diperlukan | 17 |
 
-| Data | Ketentuan |
-|---|---|
-| Nama pengguna | Wajib, string, maksimal 100 karakter |
-| Email | Wajib, email valid, maksimal 255, unik termasuk soft deleted |
-| Password | Wajib saat tambah, minimal 8 karakter; opsional saat edit dan kosong berarti tidak diganti; hash Laravel |
-| Phone | Wajib, string angka 9–15 digit; nol di depan tetap tersimpan |
-| Rank/position dan station_module | Wajib, masing-masing maksimal 100 |
-| Address | Opsional, maksimal 255 |
-| Photo profil | Opsional, JPG/PNG yang tervalidasi MIME, maksimal 2 MB; nama file dibuat server dan DB menyimpan path |
-| Nama unit | Wajib, maksimal 150; boleh duplikat |
-| Unit code | Wajib, unik, pola `^SD-(BG|CN)-[0-9]{3}$`; BG untuk board_game, CN untuk console |
-| Type | board_game atau console |
-| Condition | Wajib, string maksimal 100 |
-| Categories | Array minimal satu ID valid, tanpa duplikasi |
-| Nama kategori | Wajib, maksimal 50, unik |
-| Deskripsi unit/kategori | Opsional, teks |
-| ID peminjaman | ID valid, role/status/soft delete diperiksa ulang di dalam transaksi |
+**Keputusan tim yang berlaku di seluruh dokumen:**
 
-Jangan menerima status unit, denda, tanggal pinjam, jatuh tempo, processed_by, user_id profil, atau role dari input yang tidak berwenang. Status unit berubah lewat transaksi pinjam/kembali. Pesan validasi dalam bahasa Indonesia di dekat field; input aman tetap tersedia setelah gagal.
+1. Tidak ada registrasi publik; akun anggota dibuat Admin.  
+2. Satu baris peminjaman mewakili satu unit.  
+3. Jatuh tempo \= tanggal pinjam \+ 5 hari.  
+4. Denda \= Rp 5.000 per hari keterlambatan.  
+5. Status unit: available atau borrowed.  
+6. Unit atau anggota yang masih punya pinjaman aktif tidak boleh dihapus.  
+7. Peminjaman diinput oleh Admin.
 
-## 7. Integritas, keamanan dan performa
+## **5\. Kebutuhan Fungsional**
 
-- Implementasikan FK dan unique sesuai `erd.md`.
-- Lock baris member lalu unit untuk peminjaman, hitung ulang pinjaman setelah lock. Semua operasi yang dapat mengubah ketersediaan atau menghapus data harus memakai urutan lock konsisten; lihat ERD.
-- Buat user+profil dan perubahan unit+kategori dalam transaksi agar tidak tersimpan separuh.
-- CSRF, hashing password, regenerasi sesi setelah login, invalidasi sesi saat logout, pembatasan percobaan login, authorization dan mass-assignment protection.
-- Riwayat/member query dibatasi berdasarkan pengguna login. Uji manipulasi URL dan payload.
-- Gunakan eager loading dan pagination. Target halaman utama/pencarian <3 detik pada data demo; catat hasil ukur, jangan mengklaim tanpa pengukuran.
-- Responsif pada HP/desktop; target Chrome, Edge dan Firefox modern.
+Prioritas: **High** \= wajib untuk lolos soal, **Medium** \= pendukung.
 
-## 8. UI dan Figma
+### **5.1 Autentikasi dan Akses**
 
-Utamakan desain Figma pengguna jika link/export dapat diakses. Petakan halaman, komponen, warna, typography, spacing dan state sebelum membangun UI final. Jika belum tersedia, lanjutkan backend dan pengujian; minta link atau export Figma sebagai input yang masih dibutuhkan. UI sementara harus ditandai sementara, bukan diklaim sesuai Figma.
+| ID | Kebutuhan | Prioritas | Aturan |
+| :---- | :---- | :---- | :---- |
+| FR-01 | Sistem menyediakan halaman login dengan email dan password | High | BR-02 |
+| FR-02 | Semua halaman selain login hanya dapat diakses setelah login | High | BR-02 |
+| FR-03 | Sistem mengarahkan pengguna ke dashboard sesuai peran setelah login | High | BR-01 |
+| FR-04 | Sistem menyediakan logout | High | BR-02 |
+| FR-05 | Fitur Admin tidak dapat diakses Anggota, termasuk lewat URL langsung (otorisasi per peran) | High | BR-01 |
 
-Tema: luar angkasa yang tenang dan fungsional. Arah fallback: sidebar navy, area kerja terang, aksen teal, border dan shadow ringan, tabel mudah dibaca. Hindari neon berlebihan, glassmorphism di semua panel, gradient ungu generik, animasi bintang yang mengganggu, emoji sebagai seluruh ikon, dan kartu dekoratif tanpa fungsi. Istilah tematik boleh dipakai dengan label tindakan yang jelas.
+### **5.2 Manajemen Profil**
 
-Halaman: login; dashboard admin/member; katalog dan detail unit; CRUD kategori; CRUD unit; CRUD anggota/profil; profil sendiri; form peminjaman; pinjaman aktif admin; pinjaman saya; konfirmasi pengembalian dengan rincian denda; riwayat per anggota dan halaman cetak. Sediakan keadaan kosong, error, sukses dan validasi.
+| ID | Kebutuhan | Prioritas | Aturan |
+| :---- | :---- | :---- | :---- |
+| FR-06 | Setiap user anggota memiliki tepat satu profil | High | BR-04 |
+| FR-07 | Anggota dapat melihat dan mengubah profilnya sendiri | High | BR-05 |
+| FR-08 | Anggota tidak dapat mengubah profil anggota lain | High | BR-05 |
 
-## 9. Seed dan dokumentasi
+### **5.3 Manajemen Unit (Admin)**
 
-Seed lokal: satu admin, 3–5 member dengan profil lengkap, kategori Strategi/Party/Kooperatif/2 Pemain/Console. Unit: Catan BG001 dan BG002, Codenames BG003, Pandemic BG004, PS5 CN001 dan CN002, Nintendo Switch CN003; gunakan kode lengkap SD-BG-001 dan seterusnya. Setiap unit minimal satu kategori.
+| ID | Kebutuhan | Prioritas | Aturan |
+| :---- | :---- | :---- | :---- |
+| FR-09 | Admin dapat menambah unit dengan nama, kode unit, tipe, kondisi, deskripsi, dan satu atau lebih kategori | High | BR-06, BR-10 |
+| FR-10 | Admin dapat mengubah data unit dan kategorinya | High | BR-10 |
+| FR-11 | Admin dapat menghapus unit yang tidak sedang dipinjam | High | BR-10 |
+| FR-12 | Sistem mengizinkan beberapa unit dengan nama sama selama kode unit berbeda | High | BR-07 |
+| FR-13 | Sistem menolak kode unit yang sudah digunakan | High | BR-08 |
+| FR-14 | Semua pengguna dapat melihat daftar unit beserta kategori dan statusnya | High | BR-03 |
+| FR-15 | Semua pengguna dapat mencari unit berdasarkan nama unit | High | BR-09 |
 
-Seeder demo tidak boleh menimpa password/data pengguna yang sudah ada. Akun demo hanya untuk lokal/testing dan kredensial demo terdokumentasi sebagai data contoh. Pinjaman contoh opsional; bila dibuat, status loan dan unit wajib sinkron.
+### **5.4 Manajemen Kategori (Admin)**
 
-README: setup Windows/PowerShell, konfigurasi MySQL tanpa secret, install dependency, migration/seeder, storage link, menjalankan Vite/server, test, akun demo lokal, fitur, diagram, troubleshooting dan keterbatasan. Tambahkan hasil UAT dan panduan pemakaian. Nama tim/anggota, URL repo GitLab dan video demo belum tersedia; tandai belum diisi, jangan direkayasa. Publikasi/push repo dilakukan hanya bila diminta.
+| ID | Kebutuhan | Prioritas | Aturan |
+| :---- | :---- | :---- | :---- |
+| FR-16 | Admin dapat menambah, mengubah, dan menghapus kategori | High | BR-10 |
+| FR-17 | Nama kategori harus unik | Medium | BR-17 |
+| FR-18 | Kategori yang masih dipakai unit tidak dapat dihapus, atau relasinya dilepas dengan konfirmasi (pilih satu, lalu seragamkan di tim) | Medium | BR-10 |
 
-## 10. Acceptance criteria dan pengujian
+### **5.5 Manajemen User/Anggota (Admin)**
 
-| ID | Skenario dan hasil wajib |
-|---|---|
-| AC-01 | Tamu membuka halaman aplikasi → redirect login. |
-| AC-02 | Member membuka URL admin → akses ditolak. |
-| AC-03 | Kode unit duplikat → ditolak. |
-| AC-04 | Nama unit sama, kode berbeda → berhasil. |
-| AC-05 | Tiga kategori pada unit → tersimpan dan tampil seluruhnya. |
-| AC-06 | Cari cat → tampil nama unit yang mengandung cat. |
-| AC-07 | Pinjaman aktif ketiga → ditolak, DB tidak berubah. |
-| AC-08 | Unit sedang borrowed → peminjaman ditolak. |
-| AC-09 | Pinjam berhasil → jatuh tempo +5 hari, loan dan unit borrowed. |
-| AC-10 | Kembali tepat jatuh tempo → denda nol. |
-| AC-11 | Kembali tiga hari setelah jatuh tempo → 3 hari, Rp15.000. |
-| AC-12 | Member hanya melihat pinjamannya. |
-| AC-13 | Member mengakses/mengubah profil lain → ditolak. |
-| AC-14 | Admin dapat menampilkan dan mencetak riwayat lengkap. |
-| AC-15 | Hapus unit/member dengan pinjaman aktif → ditolak. |
-| AC-16 | Field wajib kosong → pesan pada field terkait. |
+| ID | Kebutuhan | Prioritas | Aturan |
+| :---- | :---- | :---- | :---- |
+| FR-19 | Admin dapat menambah user anggota beserta profilnya | High | BR-03, BR-10 |
+| FR-20 | Admin dapat mengubah data user dan profilnya | High | BR-10 |
+| FR-21 | Admin dapat menghapus user yang tidak memiliki pinjaman aktif | High | BR-10 |
+| FR-22 | Email user harus unik | High | BR-17 |
 
-Uji tambahan: pengembalian ganda; soft delete mempertahankan riwayat; login/sesi akun terhapus ditolak; kategori terpakai tidak dapat dihapus; akun tanpa profil tidak tercipta; edit password kosong tidak mengganti hash; manipulasi role/denda ditolak; pinjaman kedua tetap boleh walau pinjaman pertama terlambat.
+### **5.6 Peminjaman**
 
-Uji persaingan request pada MySQL terpisah: dua request untuk unit sama hanya satu berhasil; dua request ketika member sudah punya satu pinjaman hanya satu tambahan berhasil. Uji rollback saat transaksi gagal. SQLite saja tidak membuktikan perilaku row locking MySQL.
+| ID | Kebutuhan | Prioritas | Aturan |
+| :---- | :---- | :---- | :---- |
+| FR-23 | Admin dapat mencatat peminjaman dengan memilih anggota dan unit | High | BR-03 |
+| FR-24 | Sistem menolak peminjaman jika unit berstatus borrowed | High | BR-07 |
+| FR-25 | Sistem menolak peminjaman jika anggota sudah memiliki 2 pinjaman aktif | High | BR-11 |
+| FR-26 | Sistem mengisi tanggal pinjam otomatis dan menghitung jatuh tempo \= tanggal pinjam \+ 5 hari | High | BR-12 |
+| FR-27 | Setelah peminjaman tersimpan, status unit menjadi borrowed | High | BR-07 |
+| FR-28 | Hanya user dengan peran anggota yang dapat dipilih sebagai peminjam | High | BR-03 |
 
-## 11. Tahapan dan definisi selesai
+### **5.7 Pengembalian dan Denda**
 
-1. Audit proyek, migration, schema dan dependency; rangkum yang sudah ada dan gap.
-2. Migration aman, model/relasi, seeder; verifikasi pada DB yang sesuai.
-3. Login/logout, middleware/policy, profil.
-4. CRUD kategori/anggota/unit dan pencarian.
-5. Service peminjaman/pengembalian dan integritas transaksi.
-6. Dashboard, daftar, riwayat, cetak, UI Figma.
-7. Test, build asset, UAT dan dokumentasi.
+| ID | Kebutuhan | Prioritas | Aturan |
+| :---- | :---- | :---- | :---- |
+| FR-29 | Hanya Admin yang dapat memproses pengembalian | High | BR-13 |
+| FR-30 | Sistem mencatat tanggal kembali dan menghitung hari telat serta denda otomatis | High | BR-12 |
+| FR-31 | Setelah pengembalian, status pinjaman menjadi returned dan status unit kembali available | High | BR-13 |
+| FR-32 | Sistem menampilkan total denda pada saat pengembalian | High | BR-12 |
+| FR-33 | Pinjaman aktif yang melewati jatuh tempo ditandai "terlambat" di daftar | Medium | BR-12 |
 
-Pada setiap tahap perbaiki error yang ditemukan sebelum lanjut. Selesai berarti fitur terimplementasi, test terkait lolos, build berhasil, akses/perhitungan terverifikasi, dan keterbatasan dilaporkan. Jalankan test/build jika lingkungan tersedia; bila tidak, jelaskan apa yang belum dapat diuji. Jangan menjanjikan nol error atau menyebut desain sesuai Figma tanpa acuan.
+**Rumus denda:**
+
+* hari\_telat \= max(0, tanggal\_kembali \- jatuh\_tempo) dalam hari  
+* denda \= hari\_telat x Rp 5.000  
+* Contoh: dipinjam 1 Nov, jatuh tempo 6 Nov, dikembalikan 9 Nov, maka telat 3 hari dan denda Rp 15.000. Dikembalikan 6 Nov atau lebih awal, denda Rp 0\.
+
+### **5.8 Daftar Pinjaman dan Riwayat**
+
+| ID | Kebutuhan | Prioritas | Aturan |
+| :---- | :---- | :---- | :---- |
+| FR-34 | Admin dapat melihat daftar semua unit yang sedang dipinjam beserta peminjam dan jatuh tempo | High | BR-14 |
+| FR-35 | Anggota hanya dapat melihat daftar unit yang dipinjam olehnya | High | BR-15 |
+| FR-36 | Admin dapat melihat riwayat peminjaman per anggota (unit, tanggal pinjam, jatuh tempo, tanggal kembali, denda) | High | BR-16 |
+| FR-37 | Admin dapat mencetak riwayat peminjaman anggota (halaman cetak atau PDF) | High | BR-16 |
+
+## **6\. User Story**
+
+| ID | Sebagai | Saya ingin | Agar |
+| :---- | :---- | :---- | :---- |
+| US-01 | Pengguna | login dengan email dan password | hanya orang berwenang yang mengakses sistem |
+| US-02 | Astronot | mencari game berdasarkan nama | cepat tahu apakah tersedia |
+| US-03 | Astronot | melihat kategori dan status unit | memilih game sesuai selera dan jumlah pemain |
+| US-04 | Astronot | mengubah profil saya | data kontak dan penempatan saya selalu benar |
+| US-05 | Astronot | melihat daftar unit yang saya pinjam beserta jatuh tempo | tidak terlambat mengembalikan |
+| US-06 | Komandan | menambah, mengubah, menghapus unit | inventaris selalu mutakhir |
+| US-07 | Komandan | mengelola kategori | unit mudah dikelompokkan |
+| US-08 | Komandan | mengelola akun dan profil astronot | hanya kru resmi yang bisa meminjam |
+| US-09 | Komandan | mencatat peminjaman dengan validasi otomatis | batas 2 unit tidak terlanggar |
+| US-10 | Komandan | memproses pengembalian dengan denda otomatis | tidak perlu menghitung manual |
+| US-11 | Komandan | melihat semua unit yang sedang dipinjam | tahu posisi setiap unit |
+| US-12 | Komandan | mencetak riwayat peminjaman astronot | punya arsip dan bukti |
+
+## **7\. Kebutuhan Data dan Validasi**
+
+### **7.1 Struktur Data (ringkas, rinci ada di ERD)**
+
+| Tabel | Kolom utama | Catatan |
+| :---- | :---- | :---- |
+| users | id, name, email (unique), password, role (admin/member), timestamps | Login dan peran |
+| member\_profiles | id, user\_id (FK, unique), phone, rank\_or\_position, station\_module, address, photo | Relasi 1:1 ke users |
+| categories | id, name (unique), description | Genre unit |
+| units | id, name, unit\_code (unique), type (board\_game/console), condition, status (available/borrowed), description | Nama boleh duplikat |
+| category\_unit | unit\_id (FK), category\_id (FK) | Pivot many-to-many |
+| loans | id, member\_id (FK), unit\_id (FK), processed\_by (FK), borrowed\_at, due\_date, returned\_at (nullable), status (borrowed/returned), late\_days, fine\_amount | Satu baris satu unit |
+
+### **7.2 Aturan Validasi Field (BR-17)**
+
+**Login**
+
+| Field | Aturan |
+| :---- | :---- |
+| email | Wajib, format email valid |
+| password | Wajib, minimal 8 karakter |
+
+**User / Anggota**
+
+| Field | Aturan |
+| :---- | :---- |
+| name | Wajib, string, maksimal 100 karakter |
+| email | Wajib, format email, unik di tabel users |
+| password | Wajib saat tambah (minimal 8 karakter), opsional saat ubah |
+| role | Wajib, hanya admin atau member |
+
+**Profil**
+
+| Field | Aturan |
+| :---- | :---- |
+| phone | Wajib, hanya angka, 9 sampai 15 digit |
+| rank\_or\_position | Wajib, maksimal 100 karakter |
+| station\_module | Wajib, maksimal 100 karakter |
+| address | Opsional, maksimal 255 karakter |
+| photo | Opsional, gambar jpg/png, maksimal 2 MB |
+| user\_id | Unik (satu user satu profil) |
+
+**Unit**
+
+| Field | Aturan |
+| :---- | :---- |
+| name | Wajib, maksimal 150 karakter |
+| unit\_code | Wajib, unik, format SD-BG-001 atau SD-CN-001 |
+| type | Wajib, board\_game atau console |
+| condition | Wajib, misalnya baik, rusak ringan |
+| categories | Wajib, minimal 1 kategori yang ada di tabel categories |
+| description | Opsional |
+
+**Kategori**
+
+| Field | Aturan |
+| :---- | :---- |
+| name | Wajib, unik, maksimal 50 karakter |
+| description | Opsional |
+
+**Peminjaman**
+
+| Field | Aturan |
+| :---- | :---- |
+| member\_id | Wajib, user ada dan berperan anggota |
+| unit\_id | Wajib, unit ada dan berstatus available |
+| (aturan bisnis) | Anggota belum memiliki 2 pinjaman aktif |
+
+**Pengembalian**
+
+| Field | Aturan |
+| :---- | :---- |
+| loan\_id | Wajib, pinjaman ada dan berstatus borrowed |
+| returned\_at | Otomatis hari ini, tidak boleh lebih awal dari tanggal pinjam |
+
+Pesan error ditampilkan dalam bahasa Indonesia di dekat field yang bermasalah.
+
+## **8\. Daftar Halaman (Sitemap)**
+
+| Halaman | Admin | Anggota |
+| :---- | :---- | :---- |
+| Login | Ya | Ya |
+| Dashboard | Ya (ringkasan stok dan pinjaman aktif) | Ya (ringkasan pinjaman saya) |
+| Katalog dan pencarian unit | Ya | Ya |
+| Profil saya | Tidak perlu | Ya |
+| Pinjaman saya | Tidak | Ya |
+| Kelola unit (daftar, tambah, ubah, hapus) | Ya | Tidak |
+| Kelola kategori | Ya | Tidak |
+| Kelola user/anggota dan profil | Ya | Tidak |
+| Input peminjaman | Ya | Tidak |
+| Daftar unit yang dipinjam / proses pengembalian | Ya | Tidak |
+| Riwayat peminjaman per anggota dan cetak | Ya | Tidak |
+
+## **9\. Alur Utama**
+
+1. **Login:** pengguna isi email dan password, sistem cek peran, lalu arahkan ke dashboard yang sesuai.  
+2. **Peminjaman:** Admin pilih anggota dan unit, sistem cek unit tersedia dan pinjaman aktif anggota kurang dari 2, simpan loan dengan jatuh tempo \+5 hari, status unit menjadi borrowed.  
+3. **Pengembalian:** Admin pilih pinjaman aktif, sistem hitung hari telat dan denda, status pinjaman menjadi returned, status unit kembali available.  
+4. **Riwayat:** Admin pilih anggota, sistem tampilkan riwayat, Admin cetak.
+
+### **Kasus Pengecualian (Edge Cases)**
+
+Kasus berikut harus ditangani sistem dan diuji saat UAT.
+
+| ID | Kasus | Penanganan sistem | Terkait |
+| :---- | :---- | :---- | :---- |
+| EC-01 | Anggota yang sudah memegang 2 unit mengajukan pinjaman ke-3 | Ditolak, tampil pesan batas maksimal 2 unit | FR-25, AC-07 |
+| EC-02 | Admin memilih unit yang berstatus dipinjam | Ditolak; unit dipinjam tidak muncul di pilihan peminjaman | FR-24, AC-08 |
+| EC-03 | Dua pencatatan untuk unit yang sama masuk hampir bersamaan | Proses dalam satu transaksi database, yang kedua ditolak | NFR-05 |
+| EC-04 | Pengembalian setelah jatuh tempo | Hari telat dan denda dihitung otomatis dan ditampilkan | FR-30, AC-11 |
+| EC-05 | Pengembalian tepat di hari ke-5 atau lebih awal | Denda Rp 0 | FR-30, AC-10 |
+| EC-06 | Admin menekan proses pengembalian dua kali untuk pinjaman yang sama | Ditolak karena status sudah returned, denda tidak berubah | FR-31 |
+| EC-07 | Admin menghapus unit yang sedang dipinjam | Ditolak dengan pesan unit masih dipinjam | FR-11, AC-15 |
+| EC-08 | Admin menghapus anggota yang masih punya pinjaman aktif | Ditolak dengan pesan masih ada pinjaman aktif | FR-21, AC-15 |
+| EC-09 | Admin menghapus kategori yang masih dipakai unit | Sesuai keputusan tim pada FR-18 | FR-18 |
+| EC-10 | Admin menambah unit dengan kode unit yang sudah ada | Ditolak, tampil pesan kode sudah dipakai | FR-13, AC-03 |
+| EC-11 | Login dengan email atau password salah | Ditolak dengan pesan umum tanpa menyebut mana yang salah | FR-01 |
+| EC-12 | Anggota membuka URL halaman Admin secara langsung | Akses ditolak (otorisasi di sisi server) | FR-05, AC-02 |
+| EC-13 | Anggota mencoba melihat atau mengubah profil anggota lain | Ditolak | FR-08, AC-13 |
+| EC-14 | Pencarian unit tidak menemukan hasil | Tampil pesan unit tidak ditemukan | FR-15 |
+| EC-15 | Admin membuat user anggota tanpa melengkapi profil | Ditolak, profil wajib diisi (satu user satu profil) | FR-06, FR-19 |
+| EC-16 | Anggota yang masih punya pinjaman terlambat mengajukan pinjaman baru | Tidak diblokir, karena soal tidak mengatur; tim boleh menambah aturan ini jika disepakati | Asumsi |
+
+## **10\. Kebutuhan Non-Fungsional**
+
+| ID | Kategori | Kebutuhan |
+| :---- | :---- | :---- |
+| NFR-01 | Keamanan | Password disimpan terenkripsi (hash), bukan teks asli |
+| NFR-02 | Keamanan | Perlindungan CSRF pada semua form dan otorisasi berbasis peran di sisi server |
+| NFR-03 | Keamanan | Pengguna anggota tidak dapat mengakses data anggota lain lewat manipulasi URL |
+| NFR-04 | Integritas data | Foreign key dan constraint unik di database untuk kode unit, email, dan user\_id profil |
+| NFR-05 | Integritas data | Proses pinjam dan kembali berjalan dalam satu transaksi database |
+| NFR-06 | Kegunaan | Antarmuka responsif (nyaman di desktop dan HP) dengan tema luar angkasa dan istilah tematik |
+| NFR-07 | Kinerja | Halaman utama dan pencarian tampil kurang dari 3 detik pada data demo |
+| NFR-08 | Pemeliharaan | Kode mengikuti struktur MVC Laravel dan terdokumentasi di README |
+| NFR-09 | Kompatibilitas | Berjalan di browser modern (Chrome, Edge, Firefox) |
+
+## **11\. Data Seed Awal**
+
+| Data | Isi |
+| :---- | :---- |
+| Admin | 1 akun (contoh: admin@stardeck.test) |
+| Anggota | 3 sampai 5 astronot beserta profil |
+| Kategori | Strategi, Party, Kooperatif, 2 Pemain, Console |
+| Unit | Catan (SD-BG-001, SD-BG-002), Codenames (SD-BG-003), Pandemic (SD-BG-004), PS5 (SD-CN-001, SD-CN-002), Nintendo Switch (SD-CN-003); masing-masing dengan 1 atau lebih kategori |
+| Pinjaman contoh (opsional) | 1 atau 2 pinjaman aktif dan 1 yang terlambat, untuk demo denda |
+
+## **12\. Kriteria Penerimaan (Acceptance Criteria)**
+
+| ID | Skenario | Hasil yang diharapkan |
+| :---- | :---- | :---- |
+| AC-01 | Buka halaman apa pun tanpa login | Dialihkan ke login |
+| AC-02 | Login sebagai anggota lalu buka URL halaman admin | Akses ditolak |
+| AC-03 | Admin menambah unit dengan kode yang sudah ada | Ditolak dengan pesan kode sudah dipakai |
+| AC-04 | Admin menambah dua unit bernama sama dengan kode berbeda | Berhasil |
+| AC-05 | Admin menambah unit dengan 3 kategori | Ketiganya tersimpan dan tampil |
+| AC-06 | Cari "cat" di katalog | Muncul unit yang namanya mengandung "cat" |
+| AC-07 | Anggota meminjam 2 unit, lalu ke-3 diajukan | Ditolak dengan pesan batas 2 unit |
+| AC-08 | Pinjam unit yang berstatus dipinjam | Ditolak |
+| AC-09 | Pinjam unit berhasil | Jatuh tempo \= tanggal pinjam \+ 5 hari, status unit borrowed |
+| AC-10 | Kembalikan unit pada hari ke-5 | Denda Rp 0 |
+| AC-11 | Kembalikan unit pada hari ke-8 | Telat 3 hari, denda Rp 15.000 |
+| AC-12 | Anggota membuka halaman pinjaman | Hanya pinjaman miliknya yang tampil |
+| AC-13 | Anggota mencoba mengakses profil anggota lain | Ditolak |
+| AC-14 | Admin membuka riwayat anggota lalu cetak | Riwayat lengkap tampil dan dapat dicetak |
+| AC-15 | Hapus unit atau anggota yang masih punya pinjaman aktif | Ditolak |
+| AC-16 | Kirim form dengan field wajib kosong | Pesan validasi tampil di field terkait |
+
+## **13\. Asumsi dan Ketergantungan**
+
+* Teknologi: Laravel, MySQL, Blade dan Bootstrap, dikelola di GitLab.  
+* Pengembalian dan peminjaman selalu lewat Admin karena anggota menghubungi admin secara langsung.  
+* Tarif denda Rp 5.000 per hari adalah asumsi tim dan dapat diubah selama konsisten di semua dokumen.  
+* Satu orang hanya satu akun, dan akun anggota dibuat oleh Admin.
+
+### **Ketergantungan Antar Fitur dan Urutan Pengerjaan**
+
+Urutan di bawah menjadi acuan agar pengerjaan paralel oleh 3 orang tidak saling menunggu. Fitur di baris bawah bergantung pada fitur yang disebut di kolom ketiga.
+
+| Urutan | Komponen | Bergantung pada | Alasan |
+| :---- | :---- | :---- | :---- |
+| 1 | Migration dan seeder | Tidak ada | Semua fitur butuh tabel dan data awal, termasuk akun admin |
+| 2 | Autentikasi dan otorisasi peran | Urutan 1 (tabel users, seeder admin) | Semua halaman wajib login dan dibatasi per peran |
+| 3 | CRUD kategori | Urutan 2 | Kategori harus ada sebelum unit dibuat |
+| 3 | CRUD user dan profil | Urutan 2 | Anggota harus ada sebelum bisa meminjam |
+| 4 | CRUD unit dan pencarian | Urutan 3 (kategori) | Unit wajib memiliki minimal 1 kategori |
+| 5 | Peminjaman | Urutan 3 (user), 4 (unit) | Peminjaman butuh anggota dan unit yang tersedia |
+| 6 | Pengembalian dan denda | Urutan 5 | Hanya pinjaman aktif yang bisa dikembalikan |
+| 6 | Daftar pinjaman Admin dan Anggota | Urutan 5 | Menampilkan data peminjaman |
+| 7 | Riwayat dan cetak | Urutan 5 dan 6 | Riwayat memuat pinjaman yang sudah dikembalikan beserta denda |
+| 8 | UAT, manual book, dokumentasi | Semua fitur selesai | Pengujian dan dokumentasi memakai fitur yang sudah jadi |
+
+**Ketergantungan teknis dan eksternal:**
+
+* Laravel dan Composer untuk backend, MySQL untuk database.  
+* Bootstrap (atau CSS sejenis) untuk tampilan responsif.  
+* Fitur cetak riwayat memakai halaman cetak browser atau library PDF; pilih satu dan seragamkan di tim.  
+* GitLab untuk penyimpanan source code dan hasil project.  
+* Dokumen BRD dan ERD sebagai rujukan: nama tabel dan kolom di PRD harus sama dengan ERD.
+
+## **14\. Rencana Pengerjaan (2 Hari)**
+
+| Tahap | Keluaran | Waktu |
+| :---- | :---- | :---- |
+| Hari 1 | Nama Project, BRD, Flow Chart / ERD, PRD dikumpulkan | Hari ini |
+| Hari 2 pagi | Migration, seeder, autentikasi, CRUD unit, kategori, user | Hari berikutnya |
+| Hari 2 siang | Peminjaman, pengembalian, denda, daftar pinjaman, riwayat dan cetak | Hari berikutnya |
+| Hari 2 sore | Validasi, pengujian (UAT), README, skema DB, video demo, push ke GitLab | Hari berikutnya |
+
+## **15\. Deliverable Akhir**
+
+* Source code di GitLab  
+* README: nama kelompok, nama tim, nama project, daftar fitur, gambar skema database, video demo  
+* Migration dan seeder  
+* Dokumen: BRD, Flow Chart / ERD, PRD, hasil UAT, manual book, dokumentasi project
+
+## **16\. Matriks Keterlacakan (Soal ke Kebutuhan)**
+
+| No Soal | Kebutuhan terkait |
+| :---- | :---- |
+| 1 | Deliverable README (bagian 15\) |
+| 2 | FR-01 sampai FR-05 |
+| 3 | FR-01, FR-02 |
+| 4 | FR-19, FR-23, FR-28 |
+| 5 | FR-06 |
+| 6 | FR-07, FR-08 |
+| 7 | FR-09, FR-10 |
+| 8 | FR-12, FR-13 |
+| 9 | FR-15 |
+| 10 | FR-09 sampai FR-11, FR-16, FR-19 sampai FR-21 |
+| 11 | FR-25 |
+| 12 | FR-26, FR-30, FR-32 |
+| 13 | FR-29, FR-31 |
+| 14 | FR-34 |
+| 15 | FR-35 |
+| 16 | FR-36, FR-37 |
+| 17 | Bagian 7.2 |
+| 18 | Bagian 7.1 (migration) |
+| 19 | Bagian 11 (seeder) |
+| 20 | Bagian 14 dan 15 (alur dan deliverable) |
+

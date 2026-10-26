@@ -6,6 +6,7 @@ use App\Models\Loan;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\LoanService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -76,6 +77,53 @@ class LoanController extends Controller
             ->paginate(15);
 
         return view('loans.active', compact('loans'));
+    }
+
+    /**
+     * Admin: list all loans, optionally filtered by borrowed/return date and status.
+     */
+    public function allHistory(Request $request): View
+    {
+        $filters = $this->validateHistoryFilters($request);
+        $loans = $this->allHistoryQuery($filters)->paginate(20)->withQueryString();
+
+        return view('loans.all-history', compact('loans', 'filters'));
+    }
+
+    /**
+     * Admin: print all loans matching the selected filters.
+     */
+    public function printAllHistory(Request $request): View
+    {
+        $filters = $this->validateHistoryFilters($request);
+        $loans = $this->allHistoryQuery($filters)->get();
+
+        return view('loans.print-all-history', compact('loans', 'filters'));
+    }
+
+    /**
+     * @return array{borrowed_at?: string, returned_at?: string, status?: string}
+     */
+    private function validateHistoryFilters(Request $request): array
+    {
+        return $request->validate([
+            'borrowed_at' => ['nullable', 'date_format:Y-m-d'],
+            'returned_at' => ['nullable', 'date_format:Y-m-d'],
+            'status' => ['nullable', 'in:borrowed,returned'],
+        ]);
+    }
+
+    /**
+     * @param  array{borrowed_at?: string, returned_at?: string, status?: string}  $filters
+     */
+    private function allHistoryQuery(array $filters): Builder
+    {
+        return Loan::with(['member', 'unit', 'processedBy'])
+            ->when($filters['status'] ?? null, fn (Builder $query, string $status) => $query->where('status', $status))
+            ->when($filters['borrowed_at'] ?? null, fn (Builder $query, string $date) => $query->whereDate('borrowed_at', $date))
+            ->when($filters['returned_at'] ?? null, fn (Builder $query, string $date) => $query->whereDate('returned_at', $date))
+            ->orderByDesc('borrowed_at')
+            ->orderByDesc('id');
     }
 
     /**

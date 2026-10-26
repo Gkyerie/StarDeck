@@ -7,7 +7,7 @@
 | Sistem | StarDeck — Sistem Peminjaman Board Game & Console untuk Astronot Stasiun Luar Angkasa |
 | Kelompok | Kelompok 10 (Muhammad Galih, Jasmine Adinda Wibowo, Artadina Septiani) |
 | Acuan | BRD, PRD, ERD, dan flow aplikasi StarDeck |
-| Tanggal uji | 24 Oktober 2026 |
+| Tanggal uji | 26 Oktober 2026 |
 | Penguji | Pengujian otomatis melalui Laravel Feature Tests |
 | Lingkungan | SQLite in-memory; database kerja tidak di-reset atau diubah |
 
@@ -52,13 +52,14 @@ Unit Catan yang diuji adalah `SD-BG-001` dan `SD-BG-002`; pencarian juga mencaku
 | 22 | Pengembalian | Untuk pinjaman tanggal 16 Oktober 2026 dengan jatuh tempo 21 Oktober, pengembalian 24 Oktober menghasilkan keterlambatan 3 hari dan denda Rp15.000. | **LULUS** |
 | 23 | Daftar pinjaman | Admin melihat pinjaman Anggota A dan B; halaman “pinjaman saya” tiap anggota hanya menampilkan pinjamannya sendiri. | **LULUS** |
 | 24 | Riwayat | Riwayat Anggota A menampilkan unit dan tautan laporan; halaman cetak berhasil dibuka dengan rincian riwayat dan tombol cetak. | **LULUS** |
+| 25 | Riwayat keseluruhan | Admin dapat melihat pinjaman seluruh anggota, memfilter transaksi berdasarkan tanggal kembali dan status, serta mencetak hasil filter. | **LULUS** |
 
 ## Ringkasan
 
-- **Total skenario:** 24
-- **Lulus:** 24
+- **Total skenario:** 25
+- **Lulus:** 25
 - **Gagal:** 0
-- **Hasil PHPUnit:** 24 test passed, 140 assertions
+- **Hasil PHPUnit:** 25 test passed, 151 assertions
 
 ## Catatan
 

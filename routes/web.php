@@ -67,6 +67,10 @@ Route::middleware('auth')->group(function () {
         // Loans - active list
         Route::get('/loans/active', [LoanController::class, 'active'])->name('loans.active');
 
+        // Loans - all history
+        Route::get('/loans/history', [LoanController::class, 'allHistory'])->name('loans.history-all');
+        Route::get('/loans/history/print', [LoanController::class, 'printAllHistory'])->name('loans.print-all-history');
+
         // Loans - return
         Route::get('/loans/{loan}/return', [LoanController::class, 'showReturn'])->name('loans.return');
         Route::post('/loans/{loan}/return', [LoanController::class, 'processReturn'])->name('loans.process-return');

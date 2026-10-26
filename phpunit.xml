@@ -1,3 +1,12 @@
+Element:Menganalisis kebutuhan skalabilitas.
+Kriteria unjuk kerja:
+2.1 Menganalisis masalah skalabilitas berdasar lingkup dan
+lingkungan operasi sistem.
+2.2 Menganalisis kompleksitas aplikasi sesuai dengan
+kebutuhan pemrosesan dan jumlah data/pengguna yang
+akan terlibat.
+2.3 Menganalisis kebutuhan perangkat keras.
+2.4 Mendokumentasikan hasil analisis.
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"

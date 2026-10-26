@@ -1,169 +1,186 @@
-# StarDeck — Business Requirements Document
+# **StarDeck – Business Requirements Document (BRD)**
 
-Versi: 1.0  
-Status: acuan kebutuhan bisnis untuk implementasi; bukan laporan hasil pengujian.  
-Dokumen terkait: `prd.md` dan `erd.md`.  
-Dasar penyusunan: kebutuhan StarDeck pada PRD(1), keputusan ERD, dan arahan implementasi proyek Laravel yang sudah berjalan.
+**Sistem Peminjaman Board Game & Console untuk Astronot Stasiun Luar Angkasa**
 
-## 1. Gambaran bisnis
+Kelompok 10:  
+1\. Muhammad Galih  
+2\. Jasmine Adinda Wibowo  
+3\. Artadina Septiani
 
-StarDeck adalah aplikasi web pengelolaan peminjaman board game dan console dengan konteks stasiun luar angkasa. Pengelola disebut Komandan Stasiun (admin) dan anggota disebut Astronot (member). Setiap unit mewakili satu barang fisik, termasuk ketika beberapa barang memiliki nama yang sama.
+## **1\. Ringkasan Eksekutif**
 
-Sistem membantu pengelola mengetahui ketersediaan dan pemegang unit, membagi akses hiburan secara adil, mencatat pengembalian, menghitung denda, serta menyediakan riwayat sebagai bukti operasional. Tema luar angkasa merupakan konteks produk dan antarmuka; aplikasi tidak membutuhkan integrasi perangkat atau sistem penerbangan antariksa.
+StarDeck adalah aplikasi web untuk mengelola inventaris unit hiburan (board game dan console) di stasiun luar angkasa, mengatur peminjaman secara adil, menghitung denda keterlambatan, dan menyimpan riwayat peminjaman. Dengan StarDeck, Komandan Stasiun (Admin) dapat mengetahui secara pasti siapa memegang unit apa, sedangkan Astronot (anggota) mendapat akses yang adil terhadap hiburan selama misi berbulan-bulan.
 
-## 2. Permasalahan dan manfaat
+## **2\. Latar Belakang**
 
-| ID | Permasalahan | Dampak | Manfaat yang diharapkan |
-|---|---|---|---|
-| PS-01 | Pemegang unit tidak diketahui | Waktu pencarian meningkat dan timbul perselisihan | Pinjaman aktif menghubungkan unit dengan anggota |
-| PS-02 | Anggota memegang terlalu banyak unit | Akses anggota lain berkurang | Batas dua unit aktif berlaku konsisten |
-| PS-03 | Barang bernama sama sulit dibedakan | Kondisi dan riwayat barang tertukar | Setiap barang memiliki kode unik |
-| PS-04 | Pengembalian terlambat tidak tercatat | Rotasi pemakaian terhambat | Jatuh tempo dan penanda terlambat terlihat |
-| PS-05 | Denda dihitung manual | Kesalahan hitung dan perbedaan penagihan | Denda dihitung dengan rumus yang sama |
-| PS-06 | Riwayat sulit dihimpun | Bukti evaluasi tidak tersedia | Riwayat anggota dapat ditampilkan dan dicetak |
-| PS-07 | Akses tidak dibatasi sesuai tugas | Perubahan tidak berwenang dan kebocoran data | Login dan otorisasi peran serta kepemilikan data |
+Astronot di stasiun luar angkasa menjalani misi berbulan-bulan dalam kondisi terisolasi. Hiburan kru penting untuk menjaga kesehatan mental dan kekompakan tim. Saat ini peminjaman board game dan console dilakukan secara manual sehingga sering terjadi:
 
-## 3. Tujuan bisnis
+* Tidak jelas siapa yang sedang memegang unit tertentu.  
+* Satu kru menimbun banyak unit sehingga kru lain tidak kebagian.  
+* Unit terlambat dikembalikan tanpa catatan dan tanpa konsekuensi.  
+* Ruang penyimpanan stasiun terbatas sehingga stok harus dikelola ketat.
 
-1. Seluruh unit dapat diidentifikasi dan ditelusuri menggunakan kode unik.
-2. Ketersediaan unit mencerminkan transaksi peminjaman dan pengembalian yang tercatat.
-3. Setiap anggota memiliki kesempatan meminjam dengan batas yang seragam.
-4. Jatuh tempo dan denda dapat dijelaskan serta dihitung secara konsisten.
-5. Pengelola dapat menampilkan dan mencetak riwayat tanpa menyusun ulang data secara manual.
-6. Anggota dapat melihat informasi yang relevan tanpa mengakses data pribadi anggota lain.
+## **3\. Tujuan Bisnis**
 
-## 4. Pemangku kepentingan
+1. Mencatat inventaris unit hiburan secara terpusat dan akurat.  
+2. Mengatur peminjaman yang adil: **maksimal 2 unit** per anggota dan **maksimal 5 hari** per peminjaman.  
+3. Menghitung denda keterlambatan secara otomatis (**Rp 5.000 per hari** keterlambatan).  
+4. Menyimpan riwayat peminjaman yang dapat dilihat dan dicetak oleh Admin.  
+5. Memberi kejelasan status setiap unit (tersedia atau sedang dipinjam) kepada seluruh kru.
 
-| Pihak | Tanggung jawab dan kebutuhan |
-|---|---|
-| Admin / Komandan Stasiun | Mengelola inventaris, kategori, akun/profil anggota, mencatat pinjaman dan pengembalian, melihat denda dan mencetak riwayat |
-| Member / Astronot | Melihat katalog dan ketersediaan, mencari unit, memperbarui profil sendiri, memantau pinjaman sendiri |
-| Pemilik proyek | Menyediakan desain Figma, menetapkan kebutuhan dan menilai kesesuaian hasil melalui UAT |
-| Pengembang / penguji | Menerapkan PRD dan ERD, menjaga data proyek yang ada, menguji aturan bisnis serta mendokumentasikan hasil |
+### **Alasan Batasan Bisnis**
 
-Nama tim, anggota kelompok dan penanggung jawab penerimaan belum diberikan. Jangan membuat identitas atau persetujuan fiktif.
+* **Maksimal 2 unit:** ruang penyimpanan modul kru terbatas.  
+* **Maksimal 5 hari:** unit harus bergilir antar kru dalam satu siklus misi.
 
-## 5. Ruang lingkup
+## **4\. Ruang Lingkup**
 
-### Termasuk
+### **4.1 Dalam Lingkup**
 
-- Login dan logout, dua peran, pembatasan akses sesuai peran.
-- Akun anggota dibuat admin beserta profil wajib; anggota dapat mengubah profilnya sendiri.
-- Pengelolaan unit fisik dan kategori, termasuk satu unit dengan beberapa kategori.
-- Katalog dan pencarian berdasarkan nama unit.
-- Pencatatan peminjaman dan pengembalian oleh admin.
-- Pembatasan jumlah pinjaman, penetapan jatuh tempo dan perhitungan denda otomatis.
-- Daftar pinjaman aktif, riwayat per anggota dan cetak oleh admin.
-- Penghapusan logis anggota/unit dengan riwayat tetap tersimpan.
-- Migration, data contoh lokal, dokumentasi penggunaan dan bukti pengujian.
+* Login dan logout untuk Admin dan Anggota.  
+* Pencarian unit berdasarkan nama unit.  
+* Katalog unit beserta status ketersediaannya.  
+* Pengelolaan data unit, kategori, dan anggota (CRUD) oleh Admin.  
+* Pencatatan peminjaman oleh Admin dengan validasi batas 2 unit.  
+* Pemrosesan pengembalian dan perhitungan denda otomatis.  
+* Daftar unit yang sedang dipinjam (Admin: semua; Anggota: miliknya sendiri).  
+* Riwayat peminjaman per anggota beserta fitur cetak.  
+* Profil anggota yang dapat diubah oleh anggota sendiri.
 
-### Tidak termasuk
+### **4.2 Di Luar Lingkup (Versi Ini)**
 
-Registrasi mandiri, reservasi, perpanjangan pinjaman, pembayaran atau pelunasan denda, notifikasi email/SMS, aplikasi mobile native, banyak foto unit, pelacakan lokasi fisik otomatis, dan integrasi eksternal. Penambahan fitur di luar cakupan harus menjadi perubahan kebutuhan yang dinyatakan secara eksplisit.
+* Pembayaran denda online.  
+* Notifikasi email/SMS.  
+* Registrasi mandiri oleh anggota.  
+* Reservasi unit.  
+* Upload banyak foto unit.
 
-## 6. Kebutuhan bisnis dan keterlacakan
+## **5\. Pemangku Kepentingan dan Aktor**
 
-Kode BREQ di bawah digunakan untuk kebutuhan tingkat bisnis agar tidak tertukar dengan kode aturan BR pada PRD sumber.
+| Aktor | Istilah Tematik (UI) | Peran |
+| :---- | :---- | :---- |
+| Admin | Komandan Stasiun | Mengelola data, mencatat peminjaman, memproses pengembalian, melihat dan mencetak riwayat |
+| User / Anggota (member) | Astronot | Kru yang meminjam unit; melihat katalog, profil, dan pinjaman sendiri |
 
-| ID | Kebutuhan bisnis | Rujukan PRD | Data utama |
-|---|---|---|---|
-| BREQ-01 | Hanya pengguna terdaftar yang dapat mengakses aplikasi sesuai perannya | FR-01–05 | users |
-| BREQ-02 | Identitas dan profil setiap anggota tercatat lengkap serta terlindungi | FR-06–08, FR-19–22 | users, member_profiles |
-| BREQ-03 | Setiap barang fisik dapat dibedakan, dikelompokkan dan dicari | FR-09–18 | units, categories, category_unit |
-| BREQ-04 | Peminjaman berlangsung adil dan tidak menyebabkan peminjaman ganda | FR-23–28 | users, units, loans |
-| BREQ-05 | Pengembalian dan denda tercatat akurat serta konsisten | FR-29–33 | loans, units |
-| BREQ-06 | Pengelola dan anggota mendapat informasi pinjaman sesuai kewenangan | FR-34–35 | loans, users, units |
-| BREQ-07 | Riwayat anggota dapat digunakan sebagai bukti dan dicetak | FR-36–37 | loans dan relasi historis |
-| BREQ-08 | Pengelolaan inventaris/anggota tidak menghilangkan riwayat transaksi | FR-11, FR-21, FR-36–37 dan keputusan soft delete | users, units, loans |
+## **6\. Istilah dan Glosarium**
 
-## 7. Kebijakan operasional
+Istilah tematik hanya dipakai pada tampilan (UI) dan sebagai gaya bahasa di BRD/PRD. Pada ERD dan database wajib memakai istilah baku.
 
-1. Hanya ada dua peran: admin dan member. Admin membuat akun anggota; tidak ada pendaftaran publik.
-2. Setiap member wajib memiliki tepat satu profil. Profil admin tidak diwajibkan oleh kebutuhan anggota.
-3. Nama unit boleh sama; kode unit wajib unik. Contoh: SD-BG-001 dan SD-BG-002 untuk dua unit Catan.
-4. Setiap unit wajib memiliki minimal satu kategori dan dapat memiliki beberapa kategori.
-5. Admin mencatat peminjaman; member menyampaikan kebutuhan meminjam kepada admin di luar aplikasi. Tidak ada alur permohonan/persetujuan digital tambahan.
-6. Satu catatan peminjaman mewakili satu unit. Maksimal dua pinjaman aktif per member, termasuk pinjaman terlambat.
-7. Unit yang masih dipinjam tidak dapat dipinjamkan lagi. Aturan ini juga harus berlaku pada permintaan yang masuk bersamaan.
-8. Tanggal pinjam ditetapkan otomatis. Jatuh tempo adalah tanggal pinjam ditambah lima hari kalender.
-9. Hanya admin memproses pengembalian. Tanggal kembali ditetapkan otomatis dan tidak boleh mendahului tanggal pinjam.
-10. Hari terlambat = maksimum antara nol dan selisih hari tanggal kembali terhadap jatuh tempo. Denda = hari terlambat × Rp5.000.
-11. Contoh: pinjam 1 November, jatuh tempo 6 November, kembali 9 November menghasilkan tiga hari terlambat dan denda Rp15.000. Kembali paling lambat 6 November menghasilkan denda nol.
-12. Denda final ditetapkan saat pengembalian. Sistem mencatat jumlah denda, bukan pembayaran atau status pelunasannya.
-13. Pinjaman terlambat tidak menambah larangan meminjam apabila jumlah pinjaman aktif masih di bawah dua.
-14. Member hanya mengakses profil dan pinjamannya sendiri. Admin dapat mengakses daftar seluruh pinjaman dan riwayat per anggota.
-15. Unit/member dengan pinjaman aktif tidak boleh dihapus. Setelah tidak memiliki pinjaman aktif, penghapusan menggunakan soft delete agar riwayat bertahan.
-16. Email dan kode unit yang telah dipakai tetap tidak dapat digunakan ulang setelah soft delete.
-17. Kategori yang masih direferensikan unit, termasuk unit soft deleted, tidak dapat dihapus; relasi tidak dilepas otomatis.
-18. Pengembalian kedua atas transaksi yang sama ditolak tanpa mengubah hasil pengembalian pertama.
-19. Catatan admin pemroses pada loan menunjukkan admin saat peminjaman. Pencatatan admin pengembalian secara terpisah belum termasuk skema saat ini.
+| Istilah Baku (DB/ERD) | Istilah Tematik (UI) | Keterangan |
+| :---- | :---- | :---- |
+| Admin | Komandan Stasiun | Mengelola data dan pengembalian |
+| User / Anggota (member) | Astronot | Kru yang meminjam unit |
+| Unit | Unit Hiburan | Satu fisik barang (board game atau console) |
+| Kode Unit | Kode Inventaris | Unik per unit fisik, format SD-\<BG\|CN\>-\<3 digit\> |
+| Kategori | Genre | Satu unit dapat memiliki banyak kategori |
+| Peminjaman (loan) | Misi Pinjam | Transaksi pinjam |
+| Denda (fine) | Denda Orbit | Akibat keterlambatan lebih dari 5 hari |
 
-## 8. Proses bisnis yang dituju
+## **7\. Aturan Bisnis (Business Rules)**
 
-### Persiapan
+| Kode | Aturan Bisnis | No Soal |
+| :---- | :---- | :---- |
+| BR-01 | Ada 2 peran: Admin dan User (anggota) | 2 |
+| BR-02 | Semua pengguna wajib login untuk mengakses web | 3 |
+| BR-03 | Hanya user yang terdaftar sebagai anggota yang dapat meminjam | 4 |
+| BR-04 | Satu user hanya memiliki satu profil (relasi 1:1) | 5 |
+| BR-05 | Setiap user dapat mengubah profilnya sendiri | 6 |
+| BR-06 | Satu unit dapat memiliki banyak kategori (many-to-many) | 7 |
+| BR-07 | Nama unit boleh sama untuk banyak unit fisik, dibedakan oleh kode unit | 8 |
+| BR-08 | Kode unit harus unik | 8a |
+| BR-09 | Pencarian unit berdasarkan nama unit | 9 |
+| BR-10 | Admin dapat tambah, ubah, hapus data unit, kategori, dan user | 10 |
+| BR-11 | Satu anggota maksimal meminjam 2 unit pada waktu yang sama | 11 |
+| BR-12 | Lama pinjam maksimal 5 hari, lebih dari itu dikenakan denda | 12 |
+| BR-13 | Hanya Admin yang dapat memproses pengembalian; anggota menghubungi admin | 13 |
+| BR-14 | Admin dapat melihat daftar semua unit yang sedang dipinjam | 14 |
+| BR-15 | Anggota hanya melihat daftar pinjaman miliknya sendiri | 15 |
+| BR-16 | Admin dapat melihat dan mencetak riwayat peminjaman anggota | 16 |
+| BR-17 | Validasi pada setiap field yang diperlukan (required, unique, format, dll.) | 17 |
 
-Admin masuk ke aplikasi, menyiapkan kategori dan unit, lalu membuat akun anggota beserta profilnya. Katalog menampilkan barang yang masih aktif beserta kategorinya dan ketersediaannya.
+## **8\. Keputusan Tim (Penjelasan Aturan Bisnis)**
 
-### Peminjaman
+Hal-hal yang tidak ditentukan secara eksplisit pada soal telah diputuskan bersama agar semua dokumen konsisten. Perubahan hanya dilakukan lewat kesepakatan seluruh tim.
 
-Anggota melihat katalog dan menghubungi admin. Admin memilih anggota serta unit. Sistem memeriksa identitas, ketersediaan dan batas pinjaman. Jika valid, transaksi tersimpan dan unit menjadi dipinjam. Jika tidak valid, sistem menampilkan alasan tanpa menyimpan perubahan sebagian.
+1. **Tidak ada registrasi publik.** Akun anggota dibuat oleh Admin; anggota tidak dapat mendaftar sendiri.  
+2. **Satu baris peminjaman \= satu unit.** Peminjaman 2 unit sekaligus tercatat sebagai 2 baris pada tabel loans. Batas maksimal 2 dihitung dari jumlah baris loans berstatus borrowed milik anggota tersebut.  
+3. **Tanggal jatuh tempo** \= tanggal pinjam \+ 5 hari.  
+4. **Denda** \= Rp 5.000 per hari keterlambatan, dihitung saat Admin memproses pengembalian: max(0, hari\_telat) × tarif\_denda.  
+5. **Status unit:** available atau borrowed. Unit berstatus borrowed tidak dapat dipinjam lagi.  
+6. **Penghapusan:** unit atau anggota yang masih memiliki pinjaman aktif tidak boleh dihapus.  
+7. **Peminjaman dicatat oleh Admin.** Anggota datang ke Admin, lalu Admin menginput peminjaman, sehingga alur pinjam dan kembali sama-sama dikendalikan Admin. Anggota tetap dapat melihat daftar unit dan pinjamannya sendiri.
 
-### Pengembalian
+## **9\. Kebutuhan Bisnis**
 
-Anggota menyerahkan unit kepada admin. Admin membuka pinjaman aktif dan memproses pengembalian. Sistem menetapkan tanggal, menghitung keterlambatan/denda, menutup pinjaman dan mengembalikan status unit menjadi tersedia. Kondisi fisik barang diperiksa oleh admin; aplikasi tidak memverifikasinya otomatis.
+| ID | Kebutuhan Bisnis | Aturan Terkait |
+| :---- | :---- | :---- |
+| BRQ-01 | Sistem harus membatasi akses hanya untuk pengguna yang sudah login dan membedakan hak akses Admin dan Anggota. | BR-01, BR-02, BR-03 |
+| BRQ-02 | Sistem harus menyimpan data anggota beserta satu profil per anggota, dan anggota dapat memperbarui profilnya sendiri. | BR-04, BR-05 |
+| BRQ-03 | Sistem harus mengelola inventaris unit dengan kode unik, mendukung nama ganda, dan banyak kategori per unit. | BR-06, BR-07, BR-08 |
+| BRQ-04 | Sistem harus menyediakan pencarian unit berdasarkan nama. | BR-09 |
+| BRQ-05 | Admin harus dapat mengelola data unit, kategori, dan anggota. | BR-10 |
+| BRQ-06 | Sistem harus mencegah anggota meminjam lebih dari 2 unit aktif dan mencegah peminjaman unit yang sedang dipinjam. | BR-11 |
+| BRQ-07 | Sistem harus menetapkan jatuh tempo 5 hari dan menghitung denda otomatis atas keterlambatan. | BR-12 |
+| BRQ-08 | Hanya Admin yang dapat memproses pengembalian. | BR-13 |
+| BRQ-09 | Admin harus dapat memantau semua unit yang sedang dipinjam; anggota hanya melihat pinjaman miliknya. | BR-14, BR-15 |
+| BRQ-10 | Admin harus dapat melihat dan mencetak riwayat peminjaman per anggota. | BR-16 |
+| BRQ-11 | Sistem harus memvalidasi seluruh input (wajib diisi, unik, format). | BR-17 |
 
-### Pemantauan dan pelaporan
+## **10\. Proses Bisnis**
 
-Member memantau pinjamannya sendiri. Admin melihat seluruh pinjaman aktif dan penanda keterlambatan, membuka riwayat per anggota, lalu mencetaknya melalui halaman cetak. Riwayat tetap terbaca ketika unit atau anggota telah dinonaktifkan melalui soft delete.
+### **10.1 Kondisi Saat Ini (As-Is)**
 
-## 9. Indikator keberhasilan
+Peminjaman dicatat manual tanpa pencatatan terpusat. Tidak ada batas jumlah pinjaman, tidak ada pelacakan jatuh tempo, dan tidak ada konsekuensi keterlambatan.
 
-Target berikut merupakan sasaran penerimaan/operasional, bukan hasil yang sudah dicapai.
+### **10.2 Kondisi yang Diusulkan (To-Be)**
 
-| Indikator | Target | Cara verifikasi |
-|---|---|---|
-| Kriteria penerimaan fitur | Seluruh AC-01–AC-16 terpenuhi | UAT dan test terkait pada prd.md |
-| Anggota dengan lebih dari dua pinjaman aktif | Nol | Uji batas dan pemeriksaan data |
-| Unit dengan lebih dari satu pinjaman aktif | Nol | Uji transaksi bersamaan dan pemeriksaan data |
-| Perhitungan denda | Sesuai rumus pada semua skenario uji | Tanggal sebelum, tepat dan setelah jatuh tempo |
-| Kesesuaian status unit dengan kondisi peminjaman fisik | 100% sebagai target operasional | Pencocokan inventaris berkala oleh admin |
-| Waktu mencatat satu peminjaman | Kurang dari satu menit pada demo | Uji tugas admin sejak memilih data sampai tersimpan |
-| Waktu menampilkan riwayat dan membuka tampilan cetak | Kurang dari sepuluh detik pada demo | Pengukuran sampai tampilan siap; tidak termasuk printer fisik |
-| Waktu halaman utama/pencarian | Kurang dari tiga detik pada data demo | Pengukuran dengan lingkungan dan jumlah data dicatat |
-| Proporsi pinjaman terlambat | Kurang dari 10% sebagai sasaran setelah penggunaan | Per periode: loan yang returned_at > due_date, atau masih borrowed dan lewat due_date, dibagi seluruh loan yang jatuh tempo pada periode tersebut; tanpa data dilaporkan N/A |
+1. **Login:** pengguna login, sistem memeriksa peran, lalu mengarahkan ke dashboard Admin atau Anggota.  
+2. **Peminjaman:** Admin memilih anggota dan unit. Sistem memeriksa bahwa unit available dan pinjaman aktif anggota kurang dari 2\. Jika valid, sistem menyimpan loan dengan due\_date \= hari ini \+ 5 hari, dan unit berubah menjadi borrowed.  
+3. **Pengembalian:** Admin memilih loan aktif. Sistem menghitung hari telat dan denda, loan menjadi returned, dan unit kembali available.  
+4. **Riwayat:** Admin memilih anggota, sistem menampilkan riwayat, lalu Admin dapat mencetaknya.
 
-Penurunan keterlambatan bergantung pada perilaku anggota dan pengawasan admin; aplikasi tidak menjamin target perilaku hanya dengan keberadaan fitur.
+Diagram alur proses disajikan secara terpisah dalam dokumen Flowchart StarDeck.
 
-## 10. Batasan, asumsi dan ketergantungan
+## **11\. Manfaat yang Diharapkan**
 
-- Implementasi melanjutkan proyek Laravel 12 dan MySQL yang sudah disiapkan pengguna; detail teknis ada di PRD/ERD.
-- Pencatatan admin menjadi sumber kebenaran sistem. Tidak ada sensor atau pengecekan otomatis barang fisik.
-- Tarif Rp5.000/hari adalah keputusan produk yang digunakan secara konsisten di dokumen, aplikasi dan pengujian.
-- UI mengikuti desain Figma pengguna saat dapat diakses. Link/export belum tersedia pada penyusunan dokumen; kesesuaian visual final belum dapat dinilai.
-- Tema luar angkasa harus tetap mudah dibaca, responsif dan mendukung pekerjaan operasional.
-- Data pengguna yang sudah ada harus dijaga. Status migration aktual harus diperiksa sebelum perubahan.
-- Ruang lingkup tidak mencakup tanggal komitmen rilis baru, anggaran, atau jumlah pengguna produksi karena belum diberikan.
+* Kejelasan pemegang setiap unit pada setiap waktu.  
+* Pemerataan akses hiburan antar kru karena ada batas 2 unit dan 5 hari.  
+* Disiplin pengembalian melalui denda otomatis.  
+* Pengelolaan stok dan ruang penyimpanan yang lebih terkendali.  
+* Riwayat peminjaman yang tercatat dan dapat dicetak sebagai bahan evaluasi.  
+* Dukungan terhadap kesehatan mental dan kekompakan kru selama misi.
 
-## 11. Risiko dan penanganan
+## **12\. Asumsi dan Batasan**
 
-| Risiko | Penanganan |
-|---|---|
-| Dua transaksi lolos bersamaan untuk unit/member yang sama | Transaksi atomik dan penguncian sesuai ERD, dibuktikan lewat test MySQL |
-| Status tidak sesuai karena barang berpindah tanpa dicatat | Prosedur admin wajib mencatat serah terima dan melakukan pencocokan berkala |
-| Penghapusan data menghilangkan bukti pinjaman | Soft delete dan relasi historis; larangan hapus saat masih aktif |
-| Anggota melihat data orang lain | Otorisasi server berdasarkan peran dan kepemilikan; uji manipulasi URL/payload |
-| Perbedaan perhitungan tanggal/denda | Satu timezone aplikasi dan rumus hari kalender yang konsisten |
-| Implementasi mengulang tabel yang sudah ada | Audit migration dan database sebelum perubahan; tidak melakukan reset destruktif |
-| Desain Figma belum dapat diakses | Lanjutkan backend; minta acuan sebelum menyatakan UI final sesuai desain |
+* **Teknologi (asumsi):** Laravel, MySQL, Blade/Bootstrap, dan Git (GitLab).  
+* Tarif denda Rp 5.000 per hari adalah angka asumsi; jika diubah, harus diubah di seluruh dokumen.  
+* Denda hanya dicatat dan dihitung; pembayaran dilakukan di luar sistem.  
+* Anggota tidak dapat meminjam sendiri melalui aplikasi; peminjaman dilakukan melalui Admin.  
+* Data seed awal: 1 akun Admin (contoh admin@stardeck.test), 3–5 anggota beserta profil, dan kategori Strategi, Party, Kooperatif, 2 Pemain, Console.
 
-## 12. Penerimaan dan hasil kerja
+## **13\. Risiko dan Mitigasi**
 
-Hasil kerja mencakup aplikasi sesuai PRD, skema/migration sesuai ERD beserta adaptasi Laravel yang terdokumentasi, data demo, README setup, panduan penggunaan, dan laporan pengujian/UAT. Source repository serta video demo dilengkapi ketika tersedia; jangan mengarang URL atau bukti pengujian.
+| Risiko | Dampak | Mitigasi |
+| :---- | :---- | :---- |
+| Admin menjadi satu-satunya titik proses pinjam dan kembali | Antrean atau keterlambatan pencatatan | Antarmuka input yang ringkas; pertimbangkan lebih dari satu akun Admin pada versi berikutnya |
+| Data unit tidak sesuai kondisi fisik | Status tidak akurat | Pencocokan stok berkala oleh Admin |
+| Kode unit ganda atau salah format | Unit sulit dilacak | Validasi unik dan format SD-\<BG\|CN\>-\<3 digit\> |
+| Penghapusan data yang masih dipakai | Riwayat hilang atau tidak konsisten | Larang hapus unit/anggota yang punya pinjaman aktif |
 
-Penerimaan dilakukan dengan menjalankan AC-01–AC-16 pada PRD serta pengujian tambahan keamanan, soft delete, pengembalian ganda dan transaksi bersamaan. Catat hasil aktual dan masalah yang masih terbuka. Tidak boleh menyatakan selesai atau bebas error hanya karena tampilan berhasil dibuka.
+## **14\. Kriteria Keberhasilan**
 
-## 13. Penggunaan oleh Antigravity
+* Seluruh aturan BR-01 sampai BR-17 berjalan sesuai spesifikasi.  
+* Peminjaman ke-3 oleh anggota yang sama ditolak sistem.  
+* Unit berstatus borrowed tidak dapat dipinjam kembali.  
+* Denda terhitung benar pada setiap pengembalian terlambat.  
+* Admin dapat mencetak riwayat peminjaman per anggota.  
+* Nama project, istilah, dan angka batasan (2 unit, 5 hari, Rp 5.000) konsisten di BRD, ERD, dan PRD.
 
-Baca `docs/brd.md`, kemudian `docs/prd.md` dan `docs/erd.md` sebelum implementasi. BRD menjelaskan tujuan, cakupan dan kebijakan bisnis; PRD menetapkan perilaku fitur dan kriteria uji; ERD menetapkan struktur data serta integritas. Gunakan desain Figma untuk acuan visual saat tersedia.
+## **15\. Persetujuan**
 
-Ketiga dokumen harus diterapkan bersama. Jangan menafsirkan BRD sebagai izin memperluas fitur, membuat ulang proyek, menghapus data, atau mengabaikan aturan teknis PRD/ERD. Bila ada kontradiksi nyata, sebutkan bagian yang bertentangan dan selesaikan kebutuhan terkait sebelum mengubah implementasinya.
+| Nama | Peran | Tanda Tangan | Tanggal |
+| :---- | :---- | :---- | :---- |
+| (isi) | Anggota 1 |  |  |
+| (isi) | Anggota 2 |  |  |
+| (isi) | Anggota 3 |  |  |
+
